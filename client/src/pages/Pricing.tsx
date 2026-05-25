@@ -3,73 +3,7 @@ import Footer from "../components/Footer";
 import { ArrowRight, CalendarDays, Check, HelpCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
-const plans = [
-  {
-    name: "Basic",
-    monthlyPrice: 13,
-    yearlyPrice: 9,
-    description: "For hobbyists who want unlimited photo storage and a personal site.",
-    features: [
-      "Unlimited photo uploads",
-      "Full-resolution storage",
-      "Custom photo website",
-      "Basic site customization",
-      "Privacy controls",
-      "Mobile app access",
-      "24/7 support",
-    ],
-    notIncluded: [
-      "Client proofing",
-      "Print sales",
-      "Digital download sales",
-      "Advanced customization",
-      "Marketing tools",
-      "Business analytics",
-    ],
-  },
-  {
-    name: "Power",
-    monthlyPrice: 27,
-    yearlyPrice: 19,
-    description: "For enthusiasts who want to showcase, share, and delight clients.",
-    features: [
-      "Everything in Basic",
-      "Advanced site customization",
-      "Client proofing & favorites",
-      "Photo downloads for clients",
-      "Password-protected galleries",
-      "Portfolio website",
-      "Marketing tools",
-      "Contact forms",
-    ],
-    notIncluded: [
-      "Print sales",
-      "Digital download sales",
-      "Custom price lists",
-      "Business analytics",
-    ],
-  },
-  {
-    name: "Pro",
-    monthlyPrice: 36,
-    yearlyPrice: 27,
-    description: "For professionals who want to sell, grow, and run their business.",
-    features: [
-      "Everything in Power",
-      "Print sales & fulfillment",
-      "Digital download sales",
-      "Custom price lists",
-      "Coupons & discounts",
-      "Client management (CRM)",
-      "Business analytics",
-      "SEO tools",
-      "Priority support",
-    ],
-    notIncluded: [],
-    featured: true,
-  },
-];
+import { plans } from "@/data/plans";
 
 const faqs = [
   {

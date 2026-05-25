@@ -1,56 +1,6 @@
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const plans = [
-  {
-    name: "Basic",
-    price: "13",
-    period: "/mo",
-    description: "For hobbyists who want a clean portfolio and unlimited photo storage.",
-    features: [
-      "Unlimited photo uploads",
-      "Custom photo site",
-      "Basic customization",
-      "Privacy controls",
-      "24/7 support",
-    ],
-    cta: "Start Trial",
-    featured: false,
-  },
-  {
-    name: "Power",
-    price: "27",
-    period: "/mo",
-    description: "For creators who want to showcase, proof, and share with clients.",
-    features: [
-      "Everything in Basic",
-      "Advanced customization",
-      "Client proofing",
-      "Photo downloads",
-      "Marketing tools",
-      "Portfolio website",
-    ],
-    cta: "Start Trial",
-    featured: false,
-  },
-  {
-    name: "Pro",
-    price: "36",
-    period: "/mo",
-    description: "For professionals who want to sell, grow, and run the business.",
-    features: [
-      "Everything in Power",
-      "Print sales & fulfillment",
-      "Digital download sales",
-      "Custom price lists",
-      "Coupons & discounts",
-      "Business analytics",
-      "Priority support",
-    ],
-    cta: "Start Trial",
-    featured: true,
-  },
-];
+import { plans } from "@/data/plans";
 
 const PricingSection = () => {
   return (
@@ -88,8 +38,8 @@ const PricingSection = () => {
             <h3 className="font-heading font-bold text-lg uppercase tracking-wider mb-2">
               {plan.name}
             </h3>
-            <div className="flex items-baseline gap-1 mb-4">
-              <span className="text-4xl font-heading font-bold">${plan.price}</span>
+              <div className="flex items-baseline gap-1 mb-4">
+              <span className="text-4xl font-heading font-bold">${plan.monthlyPrice}</span>
               <span className={`text-sm font-body ${plan.featured ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                 {plan.period}
               </span>

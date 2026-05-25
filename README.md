@@ -1,3 +1,137 @@
+# Epixbox (photoapp)
+
+A self-hostable photo storefront and proofing application (client + API server).
+
+## Key features
+
+- Upload and manage photos and galleries
+- Proofing, selections, and downloads
+- Payments and subscriptions (Razorpay / Stripe hooks)
+- Admin panel and API documentation (Swagger)
+
+## Tech stack
+
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Node.js + Express + Sequelize (Postgres)
+- File storage: AWS S3 (or compatible)
+- Realtime: socket.io
+
+## Repository layout
+
+- `client/` — React/Vite frontend
+- `server/` — Express API, database models, and scripts
+
+## Prerequisites
+
+- Node.js (v18+ recommended)
+- PostgreSQL (or provide `DATABASE_URL`)
+- AWS account / S3 bucket (optional for uploads)
+
+## Quick start (development)
+
+1. Install dependencies for both workspaces:
+
+```bash
+npm run install:all
+```
+
+2. Copy and configure environment variables for the server (create `server/.env` or set env vars):
+
+- Database: `DATABASE_URL` or `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL`
+- JWT secrets: `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
+- Client origin: `CLIENT_URL` / `FRONTEND_URL`
+- AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET_NAME`
+- SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+- Payment keys: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and/or `STRIPE_*`
+
+3. Run database migrations (from `server/`):
+
+```bash
+cd server
+npm run db:migrate
+```
+
+4. Start both server and client (root workspace):
+
+```bash
+npm run dev
+```
+
+This runs the server (nodemon) and the Vite dev server concurrently.
+
+Windows tip: the repository includes `start-all.ps1` — run the root `oneclick` script to open the checkout flow quickly:
+
+```bash
+npm run oneclick
+```
+
+## Build & production
+
+1. Build the client:
+
+```bash
+npm run build
+```
+
+2. Start the server (ensure env vars are set and the client `dist/` is present if serving static files):
+
+```bash
+npm run start
+```
+
+Or deploy the client to Vercel/Netlify and run only the `server` on a host like Render.
+
+## Useful scripts
+
+- `npm run dev` — run both server and client for development (root)
+- `npm run build` — build client (root)
+- `cd server && npm run dev` — run server only
+- `cd client && npm run dev` — run client only
+- `cd server && npm run load:test` — run the included quick load test
+
+## Environment variables (summary)
+
+At minimum you should provide the following in a `server/.env` or host environment:
+
+- `NODE_ENV` — development/production
+- `PORT` — server port
+- `DATABASE_URL` or `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL`
+- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
+- `CLIENT_URL` / `FRONTEND_URL` (frontend origin for CORS)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET_NAME` (for uploads)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (email sending)
+- Payment provider keys: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `STRIPE_*` as needed
+
+There is a `server/.env` present in the repository as an example; do not commit real secrets to version control.
+
+## API docs
+
+Open `/api/docs` or `/api/v1/docs` when the server is running to view the Swagger UI.
+
+## Testing & load tests
+
+- Server load test: `cd server && npm run load:test`
+- Some helper scripts exist in `server/scripts/` (e.g., webhook testers)
+
+## Deployment notes
+
+- Client: configured for Vercel (see `client/vercel.json`)
+- Server: suitable for Render, Heroku, or any Node host. Ensure SSL/DB connection strings and webhooks are configured properly.
+
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Run tests and linting locally
+4. Open a pull request describing your changes
+
+## License
+
+This repository currently does not specify a license. Add a `LICENSE` file if you intend to open-source the project.
+
+----
+
+If you'd like, I can: add a short project description at the top, generate a `server/.env.example`, or create a CONTRIBUTING.md — tell me which you'd prefer next.
 # EpixBox
 
 > A comprehensive photography platform for professional photographers to showcase portfolios, manage galleries, handle client proofing, and process orders—all in one place.
