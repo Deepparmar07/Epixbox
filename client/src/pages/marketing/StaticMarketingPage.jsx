@@ -7,18 +7,18 @@ import { ArrowRight, BookOpen, Building2, CalendarDays, CircleHelp, Code2, Globe
 const PAGE_CONFIG = {
   apps: {
     title: 'Apps',
-    subtitle: 'Take your workflow everywhere with mobile-friendly and desktop tools built for photographers.',
-    hero: 'Upload, organize, proof, and sell from anywhere.',
-    actionLabel: 'Start Free Trial',
-    actionHref: '/signup',
+    subtitle: 'Coming soon: mobile-friendly and desktop tools built for photographers.',
+    hero: 'We are still building the app experience.',
+    actionLabel: 'Join Waitlist',
+    actionHref: '/contact',
     cards: [
-      { icon: Sparkles, title: 'Mobile Uploads', desc: 'Upload full-resolution files directly from your phone or tablet with original quality preserved.' },
-      { icon: Globe, title: 'Cross-device Sync', desc: 'Stay in sync across desktop, mobile web, and client-facing galleries.' },
-      { icon: ShieldCheck, title: 'Secure Access', desc: 'Protect your work with sign-in, gallery passwords, and expiring share links.' },
+      { icon: Sparkles, title: 'Mobile Uploads', desc: 'Planned for a future release.' },
+      { icon: Globe, title: 'Cross-device Sync', desc: 'Planned for a future release.' },
+      { icon: ShieldCheck, title: 'Secure Access', desc: 'Planned for a future release.' },
     ],
     sections: [
-      { title: 'Why photographers use the app experience', body: 'Quick culling, portfolio sharing, and client management are available where you need them most.' },
-      { title: 'Designed for speed', body: 'We optimized gallery browsing, downloads, and proofing so the experience feels fast even with large libraries.' },
+      { title: 'Why it is not live yet', body: 'We are still validating the workflows and polishing the mobile experience before launch.' },
+      { title: 'What to expect next', body: 'When it is ready, the app experience will focus on upload, review, and sharing workflows.' },
     ],
   },
   blog: {
@@ -265,7 +265,7 @@ export default function StaticMarketingPage({ page }) {
         <p className="body-lg max-w-2xl mx-auto mb-8">{config.subtitle}</p>
         <div className="max-w-4xl mx-auto rounded-[2rem] border border-border bg-card p-8 shadow-sm">
           <h2 className="heading-lg text-foreground mb-4">{config.hero}</h2>
-          <p className="body-lg max-w-3xl mx-auto mb-8">The public side of EpixBox is built to answer the same questions photographers ask before they sign up.</p>
+          <p className="body-lg max-w-3xl mx-auto mb-8">The public side of EpixBox is built to stay accurate about what is live today and what is still coming.</p>
           <Link to={config.actionHref} className="btn-cta inline-flex">
             {config.actionLabel} <ArrowRight size={18} />
           </Link>
@@ -298,10 +298,10 @@ export default function StaticMarketingPage({ page }) {
       </section>
 
       <section className="section-padding text-center">
-        <h2 className="heading-lg text-foreground mb-4">Ready to see the full product?</h2>
-        <p className="body-lg max-w-xl mx-auto mb-8">Create an account to use galleries, proofing, selling, subscriptions, and all the tools photographers need.</p>
-        <Link to="/signup" className="btn-cta inline-flex">
-          Start Free Trial <ArrowRight size={18} />
+        <h2 className="heading-lg text-foreground mb-4">Want to be notified when apps launch?</h2>
+        <p className="body-lg max-w-xl mx-auto mb-8">The apps page is a coming-soon preview, so we point visitors to a waitlist instead of pretending it is already live.</p>
+        <Link to="/contact" className="btn-cta inline-flex">
+          Contact Us <ArrowRight size={18} />
         </Link>
       </section>
 

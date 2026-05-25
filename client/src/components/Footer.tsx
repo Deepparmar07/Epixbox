@@ -7,7 +7,7 @@ const footerLinks: Record<string, FooterLink[]> = {
   Product: [
     { label: "Features", href: "/features" },
     { label: "Pricing", href: "/pricing" },
-    { label: "Apps", href: "/apps" },
+    { label: "Apps (Soon)", href: "/apps" },
     { label: "Portfolio Sites", href: "/p/demo" },
     { label: "Client Galleries", href: "/p/demo/weddings" },
   ],

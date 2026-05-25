@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { ArrowRight, Camera, Heart, Globe, Users, Zap, Shield, LayoutGrid, Sparkles, Smartphone } from "lucide-react";
-import { useEffect, useState } from "react";
 
 const values = [
   {
@@ -38,10 +37,10 @@ const values = [
 ];
 
 const initialStats = [
-  { value: "—", label: "Photographers" },
-  { value: "—", label: "Photos Stored" },
-  { value: "Global", label: "Reach" },
-  { value: "—", label: "Uptime" },
+  { value: "Built for", label: "Photographers" },
+  { value: "Private", label: "Product Preview" },
+  { value: "Real", label: "Workflow Support" },
+  { value: "Active", label: "Development" },
 ];
 
 const team = [
@@ -53,61 +52,10 @@ const team = [
 const publicHighlights = [
   { title: "Features", desc: "Browse uploads, proofing, sharing, sales, and branding.", href: "/features", icon: LayoutGrid },
   { title: "Pricing", desc: "Compare plans before signup and see what each tier includes.", href: "/pricing", icon: Sparkles },
-  { title: "Apps", desc: "Explore mobile and desktop workflows built for photographers.", href: "/apps", icon: Smartphone },
-]
+  { title: "Apps", desc: "Coming soon: mobile and desktop workflows for photographers.", href: "/apps", icon: Smartphone },
+];
 
 const AboutPage = () => {
-  const [statsState, setStatsState] = useState(initialStats);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadStats() {
-      try {
-        const res = await fetch('/api/v1/admin/analytics');
-        if (!res.ok) throw new Error('analytics fetch failed');
-        const json = await res.json();
-
-        const photographers = json?.totals?.users ?? null;
-        const photos = json?.totals?.photos ?? null;
-
-        // fetch uptime from health endpoint
-        let uptimeText = '—';
-        try {
-          const h = await fetch('/api/health');
-          if (h.ok) {
-            const hj = await h.json();
-            const uptimeSec = Number(hj.uptime || 0);
-            if (uptimeSec > 0) {
-              const hours = Math.floor(uptimeSec / 3600);
-              const days = Math.floor(hours / 24);
-              uptimeText = days > 0 ? `${days}d` : `${hours}h`;
-            }
-          }
-        } catch (err) {
-          // ignore
-        }
-
-        if (!mounted) return;
-
-        setStatsState([
-          { value: photographers != null ? new Intl.NumberFormat().format(photographers) : '—', label: 'Photographers' },
-          { value: photos != null ? new Intl.NumberFormat().format(photos) : '—', label: 'Photos Stored' },
-          { value: 'Global', label: 'Reach' },
-          { value: uptimeText, label: 'Uptime' },
-        ]);
-      } catch (err) {
-        // leave placeholders
-      }
-    }
-
-    loadStats();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -150,7 +98,7 @@ const AboutPage = () => {
       {/* Stats */}
       <section className="section-padding bg-foreground text-primary-foreground">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-          {statsState.map((s) => (
+          {initialStats.map((s) => (
             <div key={s.label}>
               <p className="font-heading font-bold text-4xl md:text-6xl text-accent mb-2">{s.value}</p>
               <p className="font-heading text-xs uppercase tracking-wider text-primary-foreground/70">{s.label}</p>

@@ -16,7 +16,7 @@ const discoverItems = [
   },
   {
     title: "Apps",
-    description: "Browse mobile-friendly and desktop workflows designed for photographers on the move.",
+    description: "Coming soon: mobile-friendly and desktop workflows designed for photographers on the move.",
     href: "/apps",
     icon: Smartphone,
   },
