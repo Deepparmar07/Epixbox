@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { ArrowRight, CalendarDays, Check, HelpCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { plans } from "@/data/plans";
+import { plans } from "../data/plans";
 
 const faqs = [
   {

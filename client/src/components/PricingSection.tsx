@@ -1,6 +1,6 @@
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-import { plans } from "@/data/plans";
+import { plans } from "../data/plans";
 
 const PricingSection = () => {
   return (
