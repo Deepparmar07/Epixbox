@@ -321,8 +321,26 @@ router.get('/public/:username/plans', async (req, res, next) => {
 
 // POST /api/subscriptions/checkout-session
 router.post('/checkout-session', async (req, res, next) => {
-  // Subscriptions via Stripe are disabled on this server.
-  return res.status(400).json({ error: 'Stripe subscriptions are disabled on this server.' });
+  try {
+    const { plan_id, customer } = req.body || {};
+    if (!plan_id) return res.status(400).json({ error: 'plan_id is required' });
+
+    const plan = await SubscriptionPlan.findOne({ where: { id: plan_id, is_active: true } });
+    if (!plan) return res.status(404).json({ error: 'Plan not found' });
+
+    // If Razorpay is configured, create a Razorpay subscription for the customer
+    const { razorpay } = require('../config/razorpay');
+    if (!razorpay) {
+      return res.status(400).json({ error: 'Subscription payment gateway not configured on server' });
+    }
+
+    const { createSubscriptionForCustomer } = require('../services/razorpay.service');
+    const result = await createSubscriptionForCustomer({ plan, customer: customer || {} });
+
+    res.json({ ok: true, external: result.subscription, subscription: result.dbSub });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET /api/subscriptions/customer

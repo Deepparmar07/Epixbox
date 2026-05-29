@@ -50,6 +50,7 @@ router.use('/galleries', require('./gallery-access.routes'));
 router.use('/api-keys', require('./api-keys.routes'));
 router.use('/gift-cards', require('./gift-cards.routes'));
 router.use('/subscriptions', require('./subscriptions.routes'));
+router.use('/subscriptions', require('./razorpay_subscriptions.routes'));
 router.use('/payment-methods', require('./payment-methods.routes'));
 router.use('/refunds', require('./refunds.routes'));
 router.use('/checkout', require('./checkout.routes'));

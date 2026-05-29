@@ -22,14 +22,24 @@ module.exports = (sequelize, DataTypes) => {
       },
       stripe_subscription_id: {
         type: DataTypes.STRING(255),
-        allowNull: false,
-        unique: true,
-        comment: 'Stripe Subscription ID',
+        allowNull: true,
+        unique: false,
+        comment: 'Stripe Subscription ID (nullable, kept for backward compatibility)',
       },
       stripe_customer_id: {
         type: DataTypes.STRING(255),
-        allowNull: false,
-        comment: 'Stripe Customer ID',
+        allowNull: true,
+        comment: 'Stripe Customer ID (nullable)',
+      },
+      external_subscription_id: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'External subscription ID (Razorpay or other provider)',
+      },
+      external_customer_id: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'External customer ID (Razorpay or other provider)',
       },
       status: {
         type: DataTypes.ENUM('incomplete', 'trialing', 'active', 'past_due', 'canceled', 'unpaid'),

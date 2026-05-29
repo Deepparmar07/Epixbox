@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         comment: 'Stripe Price ID for this plan',
       },
+      razorpay_plan_id: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'Razorpay plan ID for this plan (optional)',
+      },
       name: {
         type: DataTypes.STRING(255),
         allowNull: false,
