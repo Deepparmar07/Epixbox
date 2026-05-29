@@ -112,7 +112,7 @@ function Lightbox({ photo, index, total, onClose, onPrev, onNext }) {
       <div className="absolute bottom-6 right-6">
         <Link
           to={`/shop/${photo.id}`}
-          state={{ photoTitle: photo.title }}
+          state={{ photoTitle: photo.title, galleryAccessToken: accessToken }}
           onClick={e => e.stopPropagation()}
           className="bg-white text-black text-xs font-bold px-4 py-2 rounded-full hover:bg-gray-100 transition shadow-lg"
         >
@@ -429,7 +429,7 @@ export default function PortfolioGalleryPage() {
                       </span>
                       <Link
                         to={`/shop/${photo.id}`}
-                        state={{ photoTitle: photo.title }}
+                        state={{ photoTitle: photo.title, galleryAccessToken: accessToken }}
                         onClick={e => e.stopPropagation()}
                         className="text-xs bg-white text-black px-3 py-1 rounded-full font-semibold hover:bg-gray-100 transition"
                       >

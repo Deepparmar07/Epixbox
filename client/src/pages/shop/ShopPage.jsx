@@ -47,7 +47,8 @@ export default function ShopPage() {
       return
     }
 
-    getPricingForPhoto(photoId)
+    const galleryAccessToken = location.state?.galleryAccessToken
+    getPricingForPhoto(photoId, galleryAccessToken)
       .then((prods) => {
         setProducts(prods)
         if (prods.length > 0) setSelectedCategory(prods[0].category)

@@ -7,4 +7,7 @@ export const getProducts = (listId) => axiosClient.get(`/pricing/lists/${listId}
 export const createProduct = (listId, data) => axiosClient.post(`/pricing/lists/${listId}/products`, data).then(r => r.data)
 export const updateProduct = (listId, pid, data) => axiosClient.put(`/pricing/lists/${listId}/products/${pid}`, data).then(r => r.data)
 export const deleteProduct = (listId, pid) => axiosClient.delete(`/pricing/lists/${listId}/products/${pid}`).then(r => r.data)
-export const getPricingForPhoto = (photoId) => axiosClient.get(`/pricing/photo/${photoId}`).then(r => r.data)
+export const getPricingForPhoto = (photoId, accessToken) => {
+	const config = accessToken ? { headers: { 'x-gallery-access-token': accessToken } } : undefined
+	return axiosClient.get(`/pricing/photo/${photoId}`, config).then(r => r.data)
+}
