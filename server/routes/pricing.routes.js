@@ -18,8 +18,23 @@ router.get('/photo/:photoId', async (req, res, next) => {
     });
 
     if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+    // Allow pricing requests for password-protected galleries when the
+    // correct gallery access token is supplied via header or query.
+    const readGalleryAccessToken = (req) => {
+      const headerToken = req.headers['x-gallery-access-token']
+      if (headerToken) return String(headerToken).trim()
+      const queryToken = req.query.access_token
+      return queryToken ? String(queryToken).trim() : ''
+    }
+    const expectedGalleryAccessToken = (galleryId) => Buffer.from(`gallery-${galleryId}-access`).toString('base64')
+
     if (photo.Gallery && photo.Gallery.visibility === 'private') {
-      return res.status(403).json({ error: 'Pricing is not available for this photo' });
+      const provided = readGalleryAccessToken(req)
+      const expected = expectedGalleryAccessToken(photo.Gallery.id)
+      if (provided !== expected) {
+        return res.status(403).json({ error: 'Pricing is not available for this photo' })
+      }
     }
 
     let priceList = await PriceList.findOne({
