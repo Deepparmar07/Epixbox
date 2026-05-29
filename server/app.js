@@ -63,6 +63,9 @@ app.use((req, res, next) => {
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token');
+    // Expose custom headers to browser JS (so fetch/XHR can read them)
+    // add any other headers your integrations need (e.g. request-id, x-rtb-fingerprint-id)
+    res.setHeader('Access-Control-Expose-Headers', 'request-id, x-rtb-fingerprint-id');
   }
 
   if (req.method === 'OPTIONS') {
