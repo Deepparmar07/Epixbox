@@ -57,6 +57,12 @@ router.get('/photo/:photoId', async (req, res, next) => {
       };
     });
 
+    // If there are no products for this photographer, fall back to demo products
+    if (!response || response.length === 0) {
+      const fallback = DEMO_PRODUCTS.map((p) => ({ ...p, photographer_id: photo.user_id }));
+      return res.json(fallback);
+    }
+
     res.json(response);
   } catch (err) {
     // If the DB is unreachable (development convenience), return demo products so the public storefront still works
