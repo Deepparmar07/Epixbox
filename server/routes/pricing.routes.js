@@ -2,6 +2,13 @@ const router = require('express').Router();
 const { PriceList, Product, Photo, Gallery } = require('../models/index');
 const requireAuth = require('../middleware/auth.middleware');
 
+// Fallback demo products when the DB is unavailable so the public shop remains usable
+const DEMO_PRODUCTS = [
+  { id: 'demo-print-1', category: 'prints', name: '8x10 Lustre', size: '8x10', paper_type: 'Lustre', price_cents: 1800 },
+  { id: 'demo-print-2', category: 'prints', name: '11x14 Fine Art', size: '11x14', paper_type: 'Fine Art', price_cents: 3200 },
+  { id: 'demo-digital-1', category: 'digital', name: 'Web Download', size: 'Web', paper_type: '', price_cents: 2500 },
+];
+
 // GET /api/pricing/photo/:photoId (public)
 router.get('/photo/:photoId', async (req, res, next) => {
   try {
@@ -51,7 +58,15 @@ router.get('/photo/:photoId', async (req, res, next) => {
     });
 
     res.json(response);
-  } catch (err) { next(err); }
+  } catch (err) {
+    // If the DB is unreachable (development convenience), return demo products so the public storefront still works
+    const msg = String(err?.message || '')
+    if (msg.includes('ECONNREFUSED') || msg.toLowerCase().includes('connection') || (err.name && err.name.toLowerCase().includes('sequelize'))) {
+      console.warn('Pricing route fallback activated due to DB error:', msg);
+      return res.json(DEMO_PRODUCTS);
+    }
+    next(err);
+  }
 });
 
 router.use(requireAuth);

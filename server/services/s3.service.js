@@ -3,7 +3,6 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const s3Client = require('../config/s3');
 
 const BUCKET = process.env.S3_BUCKET_NAME || 'epicbox1';
-const CF_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 
 /**
  * Returns a publicly accessible URL for an S3 key.
@@ -15,7 +14,8 @@ function getPublicUrl(key) {
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
-  if (CF_DOMAIN) return `https://${CF_DOMAIN}/${safeKey}`;
+  const cf = process.env.CLOUDFRONT_DOMAIN;
+  if (cf) return `https://${cf}/${safeKey}`;
   const region = process.env.AWS_REGION || 'us-east-1';
   return `https://${BUCKET}.s3.${region}.amazonaws.com/${safeKey}`;
 }

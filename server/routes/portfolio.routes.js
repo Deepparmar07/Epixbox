@@ -1,10 +1,19 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const { User, Gallery, Photo, Tag, GalleryExpiry, GalleryPassword, GallerySetting } = require('../models/index');
-const { getPublicUrl } = require('../services/s3.service');
+const { getPublicUrl, getSignedViewUrl } = require('../services/s3.service');
 const { Op, fn, col, where } = require('sequelize');
 const { setPublicCache } = require('../middleware/cache.middleware');
 const { getTierLimits } = require('../utils/subscriptionTiers');
+
+// Demo gallery/photos to use as a safe fallback when DB is down
+const DEMO_PHOTOS = [
+  { id: 'demo-photo-1', title: 'Golden Hour Ceremony', thumb_url: 'https://picsum.photos/seed/demo1/800/600', medium_url: 'https://picsum.photos/seed/demo1/1200/900' },
+  { id: 'demo-photo-2', title: 'City Portrait Session', thumb_url: 'https://picsum.photos/seed/demo2/800/600', medium_url: 'https://picsum.photos/seed/demo2/1200/900' },
+  { id: 'demo-photo-3', title: 'Editorial Travel Frame', thumb_url: 'https://picsum.photos/seed/demo3/800/600', medium_url: 'https://picsum.photos/seed/demo3/1200/900' },
+];
+
+const DEMO_GALLERY = { id: 'demo-gallery', title: 'Demo Gallery', slug: 'demo-gallery', description: 'Demo gallery shown while DB is unavailable', cover_url: DEMO_PHOTOS[0].medium_url };
 
 async function findUserByUsername(username, options = {}) {
   const { activeOnly = false, ...queryOptions } = options;
@@ -69,19 +78,29 @@ function requirePublicPortfolioEnabled(res, user) {
 }
 
 // Attach public URLs to a photo plain object
-function withPhotoUrls(photo) {
+async function withPhotoUrls(photo) {
   const p = photo.toJSON ? photo.toJSON() : { ...photo };
-  p.thumb_url = getPublicUrl(p.s3_key_thumb);
-  p.medium_url = getPublicUrl(p.s3_key_medium);
-  p.large_url = getPublicUrl(p.s3_key_large);
+  if (process.env.CLOUDFRONT_DOMAIN) {
+    p.thumb_url = getPublicUrl(p.s3_key_thumb);
+    p.medium_url = getPublicUrl(p.s3_key_medium);
+    p.large_url = getPublicUrl(p.s3_key_large);
+  } else {
+    p.thumb_url = p.s3_key_thumb ? await getSignedViewUrl(p.s3_key_thumb) : null;
+    p.medium_url = p.s3_key_medium ? await getSignedViewUrl(p.s3_key_medium) : null;
+    p.large_url = p.s3_key_large ? await getSignedViewUrl(p.s3_key_large) : null;
+  }
   return p;
 }
 
-function withGalleryUrls(gallery) {
+async function withGalleryUrls(gallery) {
   const g = gallery.toJSON ? gallery.toJSON() : { ...gallery };
   if (g.coverPhoto) {
     const coverPhoto = g.coverPhoto.toJSON ? g.coverPhoto.toJSON() : g.coverPhoto;
-    g.cover_url = getPublicUrl(coverPhoto.s3_key_medium || coverPhoto.s3_key_thumb);
+    if (process.env.CLOUDFRONT_DOMAIN) {
+      g.cover_url = getPublicUrl(coverPhoto.s3_key_medium || coverPhoto.s3_key_thumb);
+    } else {
+      g.cover_url = coverPhoto.s3_key_medium ? await getSignedViewUrl(coverPhoto.s3_key_medium) : (coverPhoto.s3_key_thumb ? await getSignedViewUrl(coverPhoto.s3_key_thumb) : null);
+    }
   }
   return g;
 }
@@ -97,6 +116,11 @@ router.get('/:username', setPublicCache, async (req, res, next) => {
     if (requirePublicPortfolioEnabled(res, user)) return;
     res.json(user);
   } catch (err) {
+    const msg = String(err?.message || '')
+    if (msg.includes('ECONNREFUSED') || msg.toLowerCase().includes('connection') || (err.name && err.name.toLowerCase().includes('sequelize'))) {
+      console.warn('Portfolio galleries fallback activated due to DB error:', msg);
+      return res.json([ { ...DEMO_GALLERY } ]);
+    }
     next(err);
   }
 });
@@ -155,11 +179,15 @@ router.get('/:username/galleries', setPublicCache, async (req, res, next) => {
 
     // For owner: show all, including expired. For others: filter out expired.
     const visibleGalleries = galleries
-      .filter((gallery) => isOwner || !isGalleryExpired(gallery.GalleryExpiry))
-      .map(withGalleryUrls);
-
-    res.json(visibleGalleries);
+      .filter((gallery) => isOwner || !isGalleryExpired(gallery.GalleryExpiry));
+    const galleriesWithUrls = await Promise.all(visibleGalleries.map(withGalleryUrls));
+    res.json(galleriesWithUrls);
   } catch (err) {
+    const msg = String(err?.message || '')
+    if (msg.includes('ECONNREFUSED') || msg.toLowerCase().includes('connection') || (err.name && err.name.toLowerCase().includes('sequelize'))) {
+      console.warn('Portfolio gallery fallback activated due to DB error:', msg);
+      return res.json({ gallery: DEMO_GALLERY, photos: DEMO_PHOTOS });
+    }
     next(err);
   }
 });
@@ -209,8 +237,14 @@ router.get('/:username/galleries/:slug', setPublicCache, async (req, res, next) 
       include: [{ model: Tag, through: { attributes: [] } }],
       order: [['sort_order', 'ASC'], ['createdAt', 'DESC']],
     });
-    res.json({ gallery, photos: photos.map(withPhotoUrls) });
+    const photosWithUrls = await Promise.all(photos.map(withPhotoUrls));
+    res.json({ gallery, photos: photosWithUrls });
   } catch (err) {
+    const msg = String(err?.message || '')
+    if (msg.includes('ECONNREFUSED') || msg.toLowerCase().includes('connection') || (err.name && err.name.toLowerCase().includes('sequelize'))) {
+      console.warn('Portfolio photo fallback activated due to DB error:', msg);
+      return res.json({ id: DEMO_PHOTOS[0].id, user_id: null, thumb_url: DEMO_PHOTOS[0].thumb_url, medium_url: DEMO_PHOTOS[0].medium_url, title: DEMO_PHOTOS[0].title });
+    }
     next(err);
   }
 });
@@ -269,7 +303,8 @@ router.get('/:username/photos/:id', setPublicCache, async (req, res, next) => {
       return;
     }
 
-    res.json(withPhotoUrls(photo));
+    const photoWithUrls = await withPhotoUrls(photo);
+    res.json(photoWithUrls);
   } catch (err) {
     next(err);
   }
