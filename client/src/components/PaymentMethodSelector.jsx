@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, DollarSign, Apple, Chrome } from 'lucide-react'
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+// Use the same API prefix as the rest of the client (server exposes routes under /api/v1)
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 const apiUrl = (path) => `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
 
 export default function PaymentMethodSelector({ onSelect, selectedMethod = 'razorpay', onMethods }) {
