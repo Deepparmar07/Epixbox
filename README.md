@@ -110,75 +110,51 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ```mermaid
 flowchart TB
-    Developer["Developer"] -->|"push changes"| GitHub["GitHub repository<br/>main branch"]
-    GitHub -->|"frontend deployment"| Vercel
-    GitHub -->|"API auto-deploy"| Render
-
-    subgraph CI["Continuous integration"]
-        Actions["GitHub Actions"]
-        ClientBuild["Build React client"]
-        ContainerBuild["Build API and client images"]
-        ManifestCheck["Validate Kubernetes manifests"]
-        TerraformCheck["Check Terraform formatting and configuration"]
-        Actions --> ClientBuild
-        Actions --> ContainerBuild
-        Actions --> ManifestCheck
-        Actions --> TerraformCheck
-    end
-    GitHub -->|"push / pull request checks"| Actions
-
-    subgraph Production["Hosted application"]
-        Browser["Photographer or client browser"]
-
-        subgraph Web["Frontend delivery"]
-            Vercel["Vercel<br/>React + Vite app"]
-        end
-
-        subgraph Backend["Application API"]
-            Render["Render<br/>Node.js + Express"]
-            API["REST API<br/>/api/v1"]
-            Render --- API
-        end
-
-        subgraph Data["Persistence and media"]
-            Neon[("Neon PostgreSQL<br/>application records")]
-            S3[("AWS S3<br/>photo objects")]
-            CloudFront["CloudFront CDN<br/>image delivery"]
-        end
-
-        subgraph Integrations["External services"]
-            Payments["Razorpay / PayPal"]
-            SMTP["SMTP email"]
-            Sentry["Sentry<br/>optional monitoring"]
-            LogRocket["LogRocket<br/>optional session monitoring"]
-        end
-
-        Browser -->|"HTTPS: load web app"| Vercel
-        Vercel -->|"proxy /api/*"| Render
-        Browser -->|"API requests (direct or proxy)"| API
-        API -->|"Sequelize"| Neon
-        API -->|"media operations"| S3
-        S3 -->|"serve image assets"| CloudFront
-        CloudFront -->|"image delivery"| Browser
-        API -->|"checkout and webhooks"| Payments
-        API -->|"transactional messages"| SMTP
-        Vercel -.->|"client errors and traces"| Sentry
-        Render -.->|"API errors and traces"| Sentry
-        Vercel -.->|"session telemetry"| LogRocket
+    subgraph Hosted["Production application"]
+        direction LR
+        Visitor["Photographer or client"] -->|"HTTPS"| Web["Vercel<br/>React + Vite"]
+        Web -->|"API proxy: /api/*"| API["Render<br/>Node.js + Express API"]
+        API -->|"Sequelize"| Database[("Neon<br/>PostgreSQL")]
+        API -->|"private media storage"| Storage[("AWS S3")]
+        Storage -->|"image origin"| CDN["CloudFront<br/>image delivery"]
+        CDN -->|"images"| Visitor
     end
 
-    subgraph Local["Local development and infrastructure validation"]
+    subgraph Services["Connected services"]
+        direction LR
+        Payments["Razorpay / PayPal"]
+        Email["SMTP email"]
+        Sentry["Sentry<br/>optional errors and traces"]
+        LogRocket["LogRocket<br/>optional session monitoring"]
+    end
+    API -->|"payments and webhooks"| Payments
+    API -->|"transactional email"| Email
+    Web -.-> Sentry
+    API -.-> Sentry
+    Web -.-> LogRocket
+
+    subgraph Delivery["Source and continuous integration"]
+        direction LR
+        Developer["Developer"] --> Repository["GitHub repository"]
+        Repository -->|"configured deployment"| Web
+        Repository -->|"configured deployment"| API
+        Repository --> Actions["GitHub Actions"]
+        Actions --> Checks["Client and container builds<br/>Kubernetes and Terraform validation"]
+    end
+
+    subgraph Local["Local development"]
+        direction LR
         Compose["Docker Compose"]
         Kubernetes["Docker Desktop Kubernetes"]
-        Terraform["Terraform AWS foundation<br/>plan / validation only"]
+        Terraform["Terraform foundation<br/>plan and validation only"]
     end
 ```
 
-GitHub Actions builds the client and container images and validates Kubernetes
-manifests and Terraform configuration. It does not deploy those resources.
-Docker Compose and Kubernetes are local workflows; Vercel and Render hosting
-integrations handle their own deployments. The Terraform foundation is not
-currently the source of the production resources.
+The solid arrows show application traffic and configured integrations; dotted
+arrows indicate optional monitoring. GitHub Actions runs builds and
+configuration checks, while Vercel and Render handle their configured
+deployments. Docker Compose and Kubernetes are local workflows. Terraform is a
+validation foundation, not the source of the production resources.
 
 ## How EpixBox is built
 

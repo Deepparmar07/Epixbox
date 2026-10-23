@@ -4,68 +4,51 @@
 
 ```mermaid
 flowchart TB
-  Dev["Developer"] -->|"push changes"| GitHub["GitHub repository"]
-  GitHub -->|"deploy frontend"| Vercel
-  GitHub -->|"auto-deploy API"| Render
-  GitHub -->|"push / pull request checks"| Actions["GitHub Actions"]
-
-  subgraph Checks["CI checks"]
-    Actions --> ClientBuild["Build client"]
-    Actions --> ImageBuild["Build API and client images"]
-    Actions --> KubeCheck["Validate Kubernetes manifests"]
-    Actions --> TerraformCheck["Format and validate Terraform"]
+  subgraph Hosted["Production application"]
+    direction LR
+    Visitor["Photographer or client"] -->|"HTTPS"| Web["Vercel<br/>React + Vite"]
+    Web -->|"API proxy: /api/*"| API["Render<br/>Node.js + Express API"]
+    API -->|"Sequelize"| Database[("Neon<br/>PostgreSQL")]
+    API -->|"private media storage"| Storage[("AWS S3")]
+    Storage -->|"image origin"| CDN["CloudFront<br/>image delivery"]
+    CDN -->|"images"| Visitor
   end
 
-  subgraph Hosted["Hosted application"]
-    Browser["Photographer or client browser"]
+  subgraph Services["Connected services"]
+    direction LR
+    Payments["Razorpay / PayPal"]
+    Email["SMTP email"]
+    Sentry["Sentry<br/>optional errors and traces"]
+    LogRocket["LogRocket<br/>optional session monitoring"]
+  end
+  API -->|"payments and webhooks"| Payments
+  API -->|"transactional email"| Email
+  Web -.-> Sentry
+  API -.-> Sentry
+  Web -.-> LogRocket
 
-    subgraph Frontend["Frontend hosting"]
-      Vercel["Vercel<br/>React + Vite"]
-    end
-
-    subgraph APIService["Backend API"]
-      Render["Render<br/>Node.js + Express"]
-      API["REST API<br/>/api/v1"]
-      Render --- API
-    end
-
-    subgraph Storage["Database and media"]
-      Neon[("Neon PostgreSQL")]
-      S3[("AWS S3")]
-      CF["CloudFront CDN"]
-    end
-
-    subgraph Services["External integrations"]
-      Pay["Razorpay / PayPal"]
-      Email["SMTP email"]
-      Sentry["Sentry (optional)"]
-      LogRocket["LogRocket (optional)"]
-    end
-
-    Browser -->|"HTTPS"| Vercel
-    Vercel -->|"API proxy"| Render
-    Browser -->|"API requests (direct or proxy)"| API
-    API -->|"Sequelize"| Neon
-    API -->|"media operations"| S3
-    S3 -->|"image delivery"| CF
-    CF --> Browser
-    API -->|"checkout / webhooks"| Pay
-    API --> Email
-    Vercel -.-> Sentry
-    Render -.-> Sentry
-    Vercel -.-> LogRocket
+  subgraph Delivery["Source and continuous integration"]
+    direction LR
+    Developer["Developer"] --> Repository["GitHub repository"]
+    Repository -->|"configured deployment"| Web
+    Repository -->|"configured deployment"| API
+    Repository --> Actions["GitHub Actions"]
+    Actions --> Checks["Client and container builds<br/>Kubernetes and Terraform validation"]
   end
 
-  subgraph Local["Local development (not production hosting)"]
+  subgraph Local["Local development"]
+    direction LR
     Compose["Docker Compose"]
-    DockerDesktop["Docker Desktop Kubernetes"]
-    Terraform["Terraform foundation<br/>plan / validation"]
+    Kubernetes["Docker Desktop Kubernetes"]
+    Terraform["Terraform foundation<br/>plan and validation only"]
   end
 ```
 
-CloudFront is used for image delivery, not frontend hosting. The distribution,
-S3 bucket, and hosted database are configured independently of the checked-in
-Terraform foundation.
+Solid arrows show application traffic and configured integrations; dotted
+arrows indicate optional monitoring. GitHub Actions runs builds and
+configuration checks, while Vercel and Render handle their configured
+deployments. Docker Compose and Kubernetes are local workflows. Terraform is a
+validation foundation, not the source of production resources.
 
 ## Build and validation
 
