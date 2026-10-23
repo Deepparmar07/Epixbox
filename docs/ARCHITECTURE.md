@@ -7,18 +7,29 @@ stores media objects.
 ## Deployed topology
 
 ```mermaid
-flowchart LR
-    Photographer["Photographer or client"] -->|"HTTPS"| Vercel["Vercel<br/>React + Vite"]
-    Vercel -->|"Rewrite /api/*"| Render["Render<br/>Express API"]
-    Render -->|"Sequelize queries"| Neon[("Neon PostgreSQL")]
-    Render -->|"Upload / signed object access"| S3[("Private AWS S3")]
-    S3 -->|"Image delivery"| CloudFront["CloudFront CDN"]
-    CloudFront --> Photographer
-    Render --> Payments["Razorpay / PayPal"]
-    Render --> SMTP["SMTP email provider"]
-    Vercel -.->|"Optional client errors and traces"| Sentry["Sentry"]
-    Render -.->|"Optional API errors and traces"| Sentry
-    Vercel -.->|"Optional session monitoring"| LogRocket["LogRocket"]
+flowchart TB
+    subgraph Runtime["Hosted application"]
+        direction LR
+        Visitor["Photographer or client"] -->|"HTTPS"| Web["Vercel<br/>React + Vite"]
+        Web -->|"API proxy: /api/*"| API["Render<br/>Express API"]
+        API -->|"Sequelize"| Database[("Neon<br/>PostgreSQL")]
+        API -->|"private media storage"| Storage[("AWS S3")]
+        Storage -->|"image origin"| CDN["CloudFront<br/>image delivery"]
+        CDN -->|"images"| Visitor
+    end
+
+    subgraph Integrations["External integrations"]
+        direction LR
+        Payments["Razorpay / PayPal"]
+        Email["SMTP email"]
+        Sentry["Sentry<br/>optional errors and traces"]
+        LogRocket["LogRocket<br/>optional session monitoring"]
+    end
+    API -->|"payments and webhooks"| Payments
+    API -->|"transactional email"| Email
+    Web -.-> Sentry
+    API -.-> Sentry
+    Web -.-> LogRocket
 ```
 
 Vercel serves the client and rewrites `/api/:path*` to the Render API, as
