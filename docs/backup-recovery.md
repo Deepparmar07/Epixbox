@@ -1,83 +1,60 @@
-# Backup and Recovery Documentation
+# Backup and Recovery Planning
 
-## Objectives
+This document is a **planning checklist**, not evidence that backups,
+replication, retention, or recovery objectives are currently configured. Verify
+each item in the relevant provider console before relying on it.
 
-- Protect metadata in Neon PostgreSQL and media in Amazon S3.
-- Define recovery flow for accidental deletion, corruption, or region-level outage.
-- Maintain clear RTO and RPO targets.
+## Data to protect
 
-## Target Recovery Metrics
+- **PostgreSQL:** user, gallery, photo metadata, orders, subscriptions, and
+  application configuration.
+- **Amazon S3:** original media and generated image objects.
+- **Deployment configuration:** environment-variable names and operational
+  settings. Keep secret values in the hosting providers' secret stores, not in
+  this repository.
 
-- RPO (Recovery Point Objective): <= 24 hours
-- RTO (Recovery Time Objective): <= 2 hours for API read availability
+## Confirm provider protections
 
-## Data Scope
+### Neon PostgreSQL
 
-- Primary DB: Neon PostgreSQL
-- Primary object storage: Amazon S3 bucket for originals and derived images
-- Config source of truth: deployment environment variables in Render and Vercel
+- [ ] Confirm the database's backup and point-in-time recovery options.
+- [ ] Record the provider's actual retention window and recovery procedure.
+- [ ] Create a controlled restore into a non-production database and verify
+  application data before documenting recovery times.
 
-## Backup Strategy
+### Amazon S3
 
-### 1. Database (Neon)
+- [ ] Confirm bucket versioning and lifecycle configuration.
+- [ ] Decide whether cross-region/account replication is required and configure
+  it explicitly if needed.
+- [ ] Test restoration of an object version and validate application metadata
+  still refers to the expected object.
+- [ ] Confirm CloudFront behavior after object restoration or replacement.
 
-- Enable automatic backups and point-in-time restore.
-- Keep at least 7 to 14 days retention.
-- Weekly export logical dump to secure storage.
-- Validate backup integrity with restore test to staging.
+## Recovery runbooks
 
-### 2. Media (S3)
+### Database data loss
 
-- Enable S3 Versioning on the primary bucket.
-- Enable Cross-Region Replication to a secondary bucket.
-- Apply lifecycle policies to control storage cost.
-- Keep delete markers and previous versions for rollback window.
+1. Coordinate a write freeze or maintenance window where appropriate.
+2. Select a provider recovery point based on verified backup data.
+3. Restore to a separate database first when feasible.
+4. Validate users, galleries, photos, orders, subscriptions, and migration
+   state before switching application configuration.
+5. Record the incident, validation steps, and actual recovery duration.
 
-### 3. Configuration
+### S3 object deletion or corruption
 
-- Keep `.env` secrets out of git.
-- Store production env values in Render/Vercel dashboards.
-- Export and securely archive env variable inventory monthly.
+1. Identify the affected bucket and object key from application records.
+2. Use a prior object version or configured replica if one exists.
+3. Verify the restored object and any generated variants.
+4. Check the application record and CloudFront delivery path.
 
-## Recovery Runbook
+### Provider or region outage
 
-### Scenario A: Accidental DB data deletion
+1. Confirm provider status and impact before changing production routing.
+2. Use an established, tested standby only if one has actually been configured.
+3. Validate sign-in, gallery reads, media delivery, uploads, and critical
+   purchase flows after recovery.
 
-1. Pause write traffic to API if possible.
-2. Restore Neon to the latest valid point in time.
-3. Validate key tables (`users`, `galleries`, `photos`, `orders`).
-4. Re-enable traffic.
-5. Record incident timeline and root cause.
-
-### Scenario B: S3 object deletion/corruption
-
-1. Locate object version history in S3.
-2. Restore previous object version.
-3. Verify object URLs from API responses.
-4. Reprocess derivatives if required.
-
-### Scenario C: Region outage
-
-1. Switch app read/write to standby DB region or restored instance.
-2. Point media reads to replicated S3 bucket.
-3. Update DNS/config and monitor error rates.
-4. Run smoke tests (auth, upload, gallery fetch).
-
-## Verification and Drills
-
-- Perform quarterly restore drill (DB + sample media).
-- Document:
-  - start time
-  - recovery completion time
-  - data consistency checks
-- Keep drill report with action items.
-
-## Checklist
-
-- [ ] Neon PITR enabled
-- [ ] Neon retention configured
-- [ ] S3 Versioning enabled
-- [ ] S3 replication enabled
-- [ ] Lifecycle policies reviewed
-- [ ] Quarterly restore drill scheduled
-- [ ] Incident response contacts updated
+Do not publish RPO/RTO commitments until they are defined, configured, and
+demonstrated in recovery exercises.
