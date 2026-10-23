@@ -6,7 +6,33 @@
 ![Node.js](https://img.shields.io/badge/Node.js-20%2B-green?style=flat-square&logo=node.js)
 ![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=flat-square&logo=postgresql)
+![AWS S3](https://img.shields.io/badge/AWS-S3-orange?style=flat-square&logo=amazons3)
+![Sentry](https://img.shields.io/badge/Monitoring-Sentry-362D59?style=flat-square&logo=sentry)
 ![License](https://img.shields.io/badge/License-Proprietary-lightgrey?style=flat-square)
+
+[Live application](https://epixbox.vercel.app/) · [API documentation](https://epixbox.onrender.com/api/docs) · [Source code](https://github.com/Deepparmar07/Epixbox)
+
+## Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Technology stack](#technology-stack)
+- [Architecture](#architecture)
+- [How EpixBox is built](#how-epixbox-is-built)
+- [Further documentation](#further-documentation)
+- [Repository structure](#repository-structure)
+- [Prerequisites](#prerequisites)
+- [Getting started](#getting-started)
+- [Available scripts](#available-scripts)
+- [API and payments](#api-and-payment-notes)
+- [Docker Compose](#docker-compose)
+- [Local Kubernetes](#local-kubernetes-with-docker-desktop)
+- [Terraform foundation](#terraform-aws-foundation)
+- [CI checks](#ci-checks)
+- [Hosted deployment](#hosted-deployment)
+- [Monitoring and configuration](#monitoring-and-configuration)
+- [Validation](#validation)
+- [License](#license)
 
 ## Overview
 
@@ -14,20 +40,23 @@ EpixBox is a monorepo containing a React/Vite client and a Node.js/Express
 API. The application supports photographer portfolios, galleries, private
 proofing workflows, photo downloads, orders, subscriptions, and administration.
 
-The current public application deployment is:
+The configured public application topology is:
 
 ```text
-Vercel frontend -> Render API -> Neon PostgreSQL + AWS S3
+GitHub -> Vercel frontend -> Render API -> Neon PostgreSQL
+                                      -> AWS S3 -> CloudFront for image delivery
 ```
 
-AWS S3 image assets are also delivered through the manually configured
-CloudFront distribution. CloudFront is used as the CDN for S3 assets; it is
-not the frontend hosting platform.
+Vercel hosts the frontend and proxies API requests to Render. The API uses
+Neon PostgreSQL for application data and AWS S3 for media objects. A separately
+configured CloudFront distribution delivers S3-hosted image assets; CloudFront
+is not the frontend host.
 
 The repository also contains Docker, Docker Compose, Docker Desktop Kubernetes,
-Terraform, and GitHub Actions configuration for local DevOps practice and
-validation. The local Kubernetes and Terraform configurations are not the
-public production deployment.
+Terraform, and GitHub Actions configuration. Docker Compose and Kubernetes are
+for local development and validation. Terraform is a plan/validation foundation
+for a possible AWS deployment; it is not connected to the current hosted
+services or applied by CI.
 
 ## Features
 
@@ -37,11 +66,12 @@ public production deployment.
 - Image uploads, processing, downloads, and watermark support
 - Orders, products, inventory, coupons, shipping, and analytics
 - Subscription plans and account feature gates
-- Razorpay checkout, subscription, and webhook integration
+- Razorpay and PayPal payment integrations, including Razorpay webhooks
 - JWT authentication, role-based access, rate limiting, and validation
 - Admin dashboard and Swagger API documentation
 - Socket.IO real-time communication
-- AWS S3-compatible object storage with signed URLs
+- AWS S3 object storage with signed URLs and CloudFront image delivery
+- Optional Sentry error/performance monitoring and LogRocket client monitoring
 
 ## Technology Stack
 
@@ -54,24 +84,152 @@ public production deployment.
 - AWS SDK for S3 storage
 - JWT, bcrypt, Helmet, CORS, and express-rate-limit
 - Nodemailer for email
-- Razorpay SDK for the documented payment integration
+- Razorpay and PayPal SDK/client integrations
 - Swagger UI and Swagger JSDoc for API documentation
 
 ### DevOps and deployment
 
 - Docker and Docker Compose
 - Nginx for the client container
-- Kubernetes with Docker Desktop Kubernetes
-- GitHub Actions CI/CD
+- Kubernetes manifests validated for a local Docker Desktop cluster
+- GitHub Actions continuous integration for builds and infrastructure validation
 - Terraform configuration for a future AWS VPC, ECR, S3, and EKS setup
 - Vercel frontend hosting and Render API hosting
 - Neon PostgreSQL, AWS S3, and CloudFront CDN for hosted image assets
+
+### Monitoring
+
+- Sentry SDKs for optional client and API error/performance monitoring
+- LogRocket for optional client session monitoring
+- Winston structured server logs
+
+Sentry and LogRocket are initialized only when their corresponding DSN or
+application ID is configured. See [Monitoring](#monitoring-and-configuration).
+
+## Architecture
+
+```mermaid
+flowchart TB
+    Developer["Developer"] -->|"push changes"| GitHub["GitHub repository<br/>main branch"]
+    GitHub -->|"frontend deployment"| Vercel
+    GitHub -->|"API auto-deploy"| Render
+
+    subgraph CI["Continuous integration"]
+        Actions["GitHub Actions"]
+        ClientBuild["Build React client"]
+        ContainerBuild["Build API and client images"]
+        ManifestCheck["Validate Kubernetes manifests"]
+        TerraformCheck["Check Terraform formatting and configuration"]
+        Actions --> ClientBuild
+        Actions --> ContainerBuild
+        Actions --> ManifestCheck
+        Actions --> TerraformCheck
+    end
+    GitHub -->|"push / pull request checks"| Actions
+
+    subgraph Production["Hosted application"]
+        Browser["Photographer or client browser"]
+
+        subgraph Web["Frontend delivery"]
+            Vercel["Vercel<br/>React + Vite app"]
+        end
+
+        subgraph Backend["Application API"]
+            Render["Render<br/>Node.js + Express"]
+            API["REST API<br/>/api/v1"]
+            Render --- API
+        end
+
+        subgraph Data["Persistence and media"]
+            Neon[("Neon PostgreSQL<br/>application records")]
+            S3[("AWS S3<br/>photo objects")]
+            CloudFront["CloudFront CDN<br/>image delivery"]
+        end
+
+        subgraph Integrations["External services"]
+            Payments["Razorpay / PayPal"]
+            SMTP["SMTP email"]
+            Sentry["Sentry<br/>optional monitoring"]
+            LogRocket["LogRocket<br/>optional session monitoring"]
+        end
+
+        Browser -->|"HTTPS: load web app"| Vercel
+        Vercel -->|"proxy /api/*"| Render
+        Browser -->|"API requests (direct or proxy)"| API
+        API -->|"Sequelize"| Neon
+        API -->|"media operations"| S3
+        S3 -->|"serve image assets"| CloudFront
+        CloudFront -->|"image delivery"| Browser
+        API -->|"checkout and webhooks"| Payments
+        API -->|"transactional messages"| SMTP
+        Vercel -.->|"client errors and traces"| Sentry
+        Render -.->|"API errors and traces"| Sentry
+        Vercel -.->|"session telemetry"| LogRocket
+    end
+
+    subgraph Local["Local development and infrastructure validation"]
+        Compose["Docker Compose"]
+        Kubernetes["Docker Desktop Kubernetes"]
+        Terraform["Terraform AWS foundation<br/>plan / validation only"]
+    end
+```
+
+GitHub Actions builds the client and container images and validates Kubernetes
+manifests and Terraform configuration. It does not deploy those resources.
+Docker Compose and Kubernetes are local workflows; Vercel and Render hosting
+integrations handle their own deployments. The Terraform foundation is not
+currently the source of the production resources.
+
+## How EpixBox is built
+
+EpixBox is organized as an npm-workspaces monorepo. The `client` and `server`
+are separately deployable applications, developed and versioned together.
+
+1. **Build the photographer and client experience.** The React 19 + Vite
+   frontend provides gallery management, portfolios, proofing, shopping, and
+   account/admin screens. React Router handles navigation, Zustand holds
+   client state, and React Query is available for server-state workflows.
+2. **Expose application workflows through an API.** A Node.js 20 + Express
+   service groups authentication, gallery, photo, proofing, order, subscription,
+   payment, and administration endpoints under `/api/v1`. Middleware handles
+   authentication, validation, CORS, rate limits, request logging, and errors.
+3. **Persist business data separately from media.** Sequelize maps application
+   records to PostgreSQL; ordered migrations evolve the schema. Photo objects
+   are stored in private AWS S3, with signed URLs used for object access and
+   CloudFront configured for image delivery.
+4. **Connect domain services.** Sharp and supporting services process images
+   and metadata. Socket.IO supports real-time communication; Nodemailer sends
+   transactional email. Razorpay and PayPal integrations support configured
+   payment flows and webhooks.
+5. **Operate and observe the application.** Vercel hosts the frontend and
+   proxies API paths to Render, where the Express service runs. Sentry can
+   capture frontend and API errors/traces, LogRocket can provide client-session
+   monitoring, and Winston writes structured server logs when configured.
+6. **Validate changes before release.** GitHub Actions builds the client and
+   container images and validates Kubernetes manifests and Terraform
+   formatting/configuration. Local Docker Compose and Kubernetes workflows
+   make the stack reproducible for development; they are not the production
+   hosting platform.
+
+These are the codebase’s architecture and configured integrations. Optional
+services (monitoring, payment credentials, email delivery) are active only
+when configured in their respective environments.
+
+## Further documentation
+
+- [Architecture and request flow](./docs/ARCHITECTURE.md)
+- [Feature guide](./docs/FEATURES.md)
+- [Environment setup](./docs/ENVIRONMENT_SETUP.md)
+- [Project overview](./docs/PROJECT_OVERVIEW.md)
+- [Infrastructure diagram](./docs/infrastructure-diagram.md)
+- [Backup and recovery planning](./docs/backup-recovery.md)
+- [Recorded load-test results and limitations](./docs/load-test-results.md)
 
 ## Repository Structure
 
 ```text
 .
-├── .github/workflows/       # GitHub Actions CI/CD
+├── .github/workflows/       # GitHub Actions build and validation checks
 ├── client/                  # React/Vite frontend
 │   ├── src/
 │   └── scripts/
@@ -84,6 +242,7 @@ public production deployment.
 │   ├── scripts/
 │   └── services/
 ├── docker/                  # Nginx configuration
+├── docs/                    # Architecture, feature, setup, and operations guides
 ├── k8s/                     # Local Kubernetes manifests
 ├── terraform/               # Plan-only AWS foundation
 ├── Dockerfile.client        # Client build and Nginx runtime image
@@ -123,21 +282,38 @@ npm install
 ```
 
 Configure the server environment. Use `server/.env` locally and never commit
-real credentials. The required values commonly include:
+real credentials. The server requires database connection settings and
+`JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`; for example:
 
 ```env
 NODE_ENV=development
 PORT=4000
-DATABASE_URL=postgresql://...
-JWT_ACCESS_SECRET=replace-me
-JWT_REFRESH_SECRET=replace-me
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=photoapp_dev
+DB_USER=postgres
+DB_PASSWORD=your-local-password
+DB_SSL=false
+JWT_ACCESS_SECRET=generate-a-unique-local-secret
+JWT_REFRESH_SECRET=generate-a-different-local-secret
 CLIENT_URL=http://localhost:5173
 FRONTEND_URL=http://localhost:5173
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=replace-me
-AWS_SECRET_ACCESS_KEY=replace-me
-S3_BUCKET_NAME=replace-me
 ```
+
+Alternatively, set `DATABASE_URL` instead of the individual `DB_*` values.
+Copy the relevant optional variables from [`.env.example`](./.env.example)
+into `server/.env` for integrations you need, such as S3, SMTP, payment
+providers, Google sign-in, or Sentry. Never commit real credentials.
+
+For the Vite client, create `client/.env.local` with:
+
+```env
+VITE_API_BASE_URL=http://localhost:4000/api/v1
+```
+
+Optional client integrations use `VITE_` variables from `.env.example`.
+Vite embeds these values into the built client, so they must not contain
+private credentials.
 
 Run migrations only against the intended development database:
 
@@ -157,8 +333,8 @@ npm run dev
 - API: `http://localhost:4000`
 - API health check: `http://localhost:4000/health`
 
-On Windows, `npm run oneclick` uses [start-all.ps1](./start-all.ps1) to open
-the development processes and checkout flow.
+On Windows, `npm run oneclick` uses [start-all.ps1](./start-all.ps1) to start
+the development processes and optionally open the checkout flow.
 
 ## Available Scripts
 
@@ -194,14 +370,15 @@ npm run test:razorpay-webhook --workspace=server
 ## API and Payment Notes
 
 The API is mounted under `/api/v1`. Swagger documentation is available at
-`/api/docs` or `/api/v1/docs` when the API is running.
+`/api/docs` or `/api/v1/docs` when the API is running, and at the
+[hosted API documentation URL](https://epixbox.onrender.com/api/docs).
 
 Implemented API areas include authentication, galleries, photos, proofing,
 portfolio, uploads, orders, products, inventory, shipping, analytics,
 subscriptions, payment methods, refunds, checkout, and administration.
 
-Razorpay is the payment integration documented for this project. Configure its
-credentials only when testing checkout or subscriptions:
+Configure payment credentials only for providers and flows you have enabled.
+Razorpay checkout and subscriptions use:
 
 ```env
 RAZORPAY_KEY_ID=rzp_test_...
@@ -209,7 +386,11 @@ RAZORPAY_KEY_SECRET=replace-me
 RAZORPAY_WEBHOOK_SECRET=replace-me
 ```
 
-The server includes a signed webhook test helper:
+PayPal credentials are `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`; set
+`PAYPAL_MODE=sandbox` for sandbox use or `PAYPAL_MODE=live` for live API
+requests. Keep payment secrets on the server only.
+
+The server includes a signed Razorpay webhook test helper:
 
 ```bash
 cd server
@@ -324,7 +505,7 @@ Do not run `terraform apply` without reviewing AWS costs, IAM permissions,
 networking, and the production architecture. EKS, NAT gateways, load
 balancers, and worker nodes can create charges.
 
-## CI/CD
+## CI checks
 
 GitHub Actions runs on pushes and pull requests targeting `main`. The workflow
 currently:
@@ -368,6 +549,28 @@ Terraform workflows must not be used to replace or reset the existing hosted
 data. Never run destructive database commands such as `DROP`, `TRUNCATE`, or
 Sequelize `sync({ force: true })` against production.
 
+## Monitoring and configuration
+
+Monitoring integrations are optional and stay disabled until their project
+settings are provided:
+
+| Integration | Environment variable | Purpose |
+| --- | --- | --- |
+| Sentry API | `SENTRY_DSN` | Captures API exceptions and performance traces |
+| Sentry client | `VITE_SENTRY_DSN` | Captures client errors and performance traces |
+| LogRocket | `VITE_LOGROCKET_APP_ID` | Enables client session monitoring |
+
+`SENTRY_TRACES_SAMPLE_RATE` and `VITE_SENTRY_TRACES_SAMPLE_RATE` control
+performance trace sampling. Configure client `VITE_*` values in the frontend
+hosting environment; they are embedded in the client build and must not contain
+private credentials. Configure API credentials and server-side `SENTRY_DSN` in
+Render's server environment. Never commit database passwords, JWT secrets,
+AWS credentials, or payment secrets.
+
+See the [environment example](./.env.example) for configuration templates.
+Some settings are optional or provider-specific; configure only the
+integrations enabled for the target environment.
+
 ## Validation
 
 Useful local checks include:
@@ -397,4 +600,4 @@ Proprietary — All rights reserved. This repository is not open source.
 
 ---
 
-**Last Updated:** October 18, 2026
+**Last Updated:** October 24, 2026

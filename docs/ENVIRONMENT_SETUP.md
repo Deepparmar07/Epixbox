@@ -1,334 +1,170 @@
-# EpixBox Environment Setup Guide
+# EpixBox Environment Setup
 
-## Overview
-This guide covers complete setup for development, testing, and production deployment of the EpixBox photography platform.
+This guide covers local development and the variables used by the hosted
+Vercel/Render deployment. Optional integrations can be left unconfigured until
+you need them.
 
-## Quick Start (5 minutes)
-```bash
-# 1. Install dependencies
+## Requirements
+
+- Node.js 20 or newer and npm
+- PostgreSQL 14+ locally or a development PostgreSQL-compatible database
+- Git
+
+Optional tools:
+
+- Docker Desktop for container workflows
+- Docker Desktop Kubernetes and `kubectl` for local manifest validation
+- Terraform for formatting, initialization, and validation only
+
+Redis is not a required application dependency in the current package
+manifests.
+
+## Install
+
+From the repository root:
+
+```sh
 npm install
-
-# 2. Setup database
-createdb -U postgres photoappp_dev  # or create via PostgreSQL GUI
-cd server && npm run db:migrate
-
-# 3. Copy & fill .env
-cp .env.example .env
-# Edit .env with your local values (see section 3 below)
-
-# 4. Start dev servers (in separate terminals)
-npm run dev  # Starts both server and client
-
-# Server: http://localhost:4000
-# Client: http://localhost:5173
 ```
 
-## Prerequisites
-- Node.js 20+ LTS
-- PostgreSQL 14+ (local or remote)
-- Redis 6+ (for job queues)
-- AWS S3 account (for photo storage)
-- Stripe account (for payments)
-- Email service (Mailtrap for dev)
+The root package uses npm workspaces for `client` and `server`.
 
-## 1. Database Setup
+## Configure the API
 
-### Local PostgreSQL Installation
+The API loads `server/.env`. The root [`.env.example`](../.env.example) is a
+reference template containing both server and client settings; copy only the
+variables needed for the API into `server/.env`.
 
-#### Windows (via PostgreSQL installer)
-```bash
-# Download from https://www.postgresql.org/download/windows/
-# Install with default settings (port 5432, user postgres, password postgres)
-# Start PostgreSQL: psql -U postgres
-psql -U postgres -c "CREATE DATABASE photoapp_dev;"
-```
+Required server settings:
 
-#### macOS (via Homebrew)
-```bash
-brew install postgresql@14
-brew services start postgresql@14
-createdb -U postgres photoapp_dev
-```
-
-#### Linux (Ubuntu/Debian)
-```bash
-sudo apt-get install postgresql-14
-sudo -u postgres createdb photoapp_dev
-```
-
-### Run Database Migrations
-```bash
-cd server
-npm run db:migrate
-```
-
-This will apply all 5 migration phases:
-- **Phase 1-3**: 2FA, watermarks, themes, coupons, photo indexing
-- **Phase 4**: Product variants and inventory management
-- **Phase 5**: Shipping zones and rates
-- **Phase 7**: Subdomains, gallery passwords, gallery expiries
-- **Phase 8**: API keys, gift cards, subscriptions, payment methods, refunds
-
-### Verify Database
-```bash
-psql -U postgres -d photoapp_dev -c "\dt"  # List all tables
-psql -U postgres -d photoapp_dev -c "\di"  # List all indexes
-```
-
-## 2. Redis Setup
-
-### Windows (via WSL or Docker)
-```bash
-# Using Docker
-docker run -d -p 6379:6379 redis:7-alpine
-
-# OR using WSL
-wsl --install ubuntu
-wsl
-sudo apt-get install redis-server
-redis-server
-```
-
-### macOS (via Homebrew)
-```bash
-brew install redis
-brew services start redis
-```
-
-### Linux (Ubuntu/Debian)
-```bash
-sudo apt-get install redis-server
-sudo systemctl start redis-server
-```
-
-### Verify Redis
-```bash
-redis-cli ping  # Should respond "PONG"
-```
-
-## 3. Environment Configuration
-
-### Server (.env)
-Copy `.env.example` to `.env` and fill in these critical values:
-
-```bash
-# Database
+```env
+NODE_ENV=development
+PORT=4000
 DB_HOST=localhost
-# Payments
-RAZORPAY_KEY_ID=rzp_test_your_key_here
-RAZORPAY_KEY_SECRET=your_razorpay_secret_here
-RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret_here
-PAYPAL_CLIENT_ID=your_paypal_client_id
-PAYPAL_CLIENT_SECRET=your_paypal_secret
-DB_PASSWORD=postgres
+DB_PORT=5432
+DB_NAME=photoapp_dev
+DB_USER=postgres
+DB_PASSWORD=your-local-password
 DB_SSL=false
-
-# Auth
-JWT_ACCESS_SECRET=your_256_bit_secret_here
-VITE_RAZORPAY_KEY_ID=rzp_test_your_key_here
-VITE_PAYPAL_CLIENT_ID=your_paypal_client_id
-
-# AWS S3
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=epixbox-photos-dev
-
-# Stripe
-STRIPE_SECRET_KEY=sk_test_your_key_here
-STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_secret_here
-
-SMTP_USER=your_mailtrap_user
-SMTP_PASS=your_mailtrap_pass
-EMAIL_FROM=noreply@epixbox.dev
-
-# URLs
+JWT_ACCESS_SECRET=generate-a-unique-secret
+JWT_REFRESH_SECRET=generate-a-different-secret
 CLIENT_URL=http://localhost:5173
-API_BASE_URL=http://localhost:4000/api/v1
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Optional: Monitoring
-SENTRY_DSN=your_sentry_dsn_here
-VITE_LOGROCKET_APP_ID=your_logrocket_id_here
+FRONTEND_URL=http://localhost:5173
 ```
 
-### Client (.env)
-The client picks up VITE_ prefixed variables from server .env:
-```bash
+You can use `DATABASE_URL` in place of the individual `DB_*` variables. Set
+`DB_SSL=true` when your database requires SSL. Generate distinct random JWT
+secrets for local use; never reuse production credentials.
+
+For a hosted or local S3 bucket, add:
+
+```env
+AWS_REGION=your-region
+AWS_ACCESS_KEY_ID=your-restricted-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET_NAME=your-private-bucket
+```
+
+Use a dedicated IAM identity with only the permissions required by the
+application, and keep AWS credentials server-side. Add SMTP, Razorpay, PayPal,
+Google OAuth, or Sentry variables only when configuring those integrations.
+The full variable-name reference is in [`.env.example`](../.env.example).
+
+## Configure the client
+
+Vite loads client environment variables from the `client` directory. Create
+`client/.env.local`:
+
+```env
 VITE_API_BASE_URL=http://localhost:4000/api/v1
-VITE_SENTRY_DSN=your_sentry_dsn_here
-VITE_LOGROCKET_APP_ID=your_logrocket_id_here
 ```
 
-> Payment provider secrets are server-side only for the current Razorpay flow.
-> The client does not need `VITE_RAZORPAY_KEY_ID` or `VITE_RAZORPAY_KEY_SECRET`.
+Optional client integrations include:
 
-## 4. Getting Credentials
+```env
+VITE_GOOGLE_CLIENT_ID=
+VITE_SENTRY_DSN=
+VITE_SENTRY_TRACES_SAMPLE_RATE=0.1
+VITE_LOGROCKET_APP_ID=
+```
 
-### AWS S3
-1. Go to https://console.aws.amazon.com/
-2. Create IAM user with S3 permissions
-3. Generate access key and secret
-4. Create S3 bucket: `epixbox-photos-dev`
+Any `VITE_*` value is bundled into the public client. Do not put server-side
+secrets, AWS credentials, payment secrets, database credentials, or JWT secrets
+in client variables.
 
-### Razorpay
-1. Sign up at https://razorpay.com
-2. Go to the API keys section and copy your test keys.
-3. Add a webhook endpoint for the checkout flow:
-	- `http://localhost:4000/api/v1/checkout/razorpay/webhook`
-4. Create a webhook secret and set it in `RAZORPAY_WEBHOOK_SECRET`.
+## Initialize PostgreSQL
 
-### Email (Mailtrap)
-1. Sign up at https://mailtrap.io
-2. Create new inbox
-3. Copy SMTP credentials
+Create a development database, then run migrations from the repository root:
 
-### Google OAuth (Optional)
-1. Go to https://console.cloud.google.com/
-2. Create new project
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials (Web application)
-5. Add `http://localhost:5173` as authorized redirect
+```sh
+npm run db:migrate --workspace=server
+```
 
-## 5. Development Server
+Review the target database before running migrations. Never point local
+development commands at production unintentionally.
 
-### Terminal 1 - Backend
-```bash
-cd server
-npm install
+## Run locally
+
+Start the API and frontend together:
+
+```sh
 npm run dev
-# Server runs on http://localhost:4000
-# API docs at http://localhost:4000/api/v1/docs
 ```
 
-### Terminal 2 - Frontend
-```bash
-cd client
-npm install
-npm run dev
-# Client runs on http://localhost:5173
+- Frontend: `http://localhost:5173`
+- API health: `http://localhost:4000/health`
+- Swagger UI: `http://localhost:4000/api/docs`
+
+On Windows, `npm run oneclick` runs the PowerShell development launcher.
+
+## Hosted configuration
+
+### Vercel frontend
+
+Set the required client build variables in the Vercel project:
+
+- `VITE_API_BASE_URL` (normally `/api/v1` when using the configured Vercel
+  rewrite)
+- Any optional `VITE_*` integrations in use
+
+The variables are embedded at build time; redeploy after changing them.
+
+### Render API
+
+Set server-side values in the Render environment:
+
+- Database connection (`DATABASE_URL` or `DB_*`)
+- `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`
+- AWS, SMTP, payment, OAuth, and Sentry values for enabled features
+
+Production startup is configured with `AUTO_MIGRATE=false` and
+`ALLOW_PENDING_MIGRATIONS=true`, so migrations are deliberately not applied
+automatically. Review and apply migrations through a controlled deployment
+process with a verified backup.
+
+## Optional local tooling
+
+Docker Compose runs the API and Nginx frontend; it does not provision
+PostgreSQL. Configure a development database and API `server/.env` first, then:
+
+```sh
+docker compose up --build
 ```
 
-### Terminal 3 - Redis (if not using docker)
-```bash
-redis-server
-```
+For Docker Desktop Kubernetes and Terraform commands, see the corresponding
+sections in the [root README](../README.md). The Kubernetes manifests are a
+local learning/validation setup; Terraform is not connected to production.
 
-## 6. Testing Login
-1. Go to http://localhost:5173
-2. Sign up with test email
-3. Check console for Mailtrap email (won't actually send in test mode)
-4. Use test email in database directly if needed
+## Troubleshooting
 
-```bash
-# Direct DB login setup
-psql -U postgres -d photoapp_dev
-UPDATE "Users" SET "emailVerified" = true WHERE "email" = 'test@example.com';
-```
-
-## 7. Testing Stripe Integration
-Use Stripe test cards:
-- Success: `4242 4242 4242 4242`
-- Decline: `4000 0000 0000 0002`
-- Requires auth: `4000 0025 0000 3155`
-
-## 8. Troubleshooting
-
-### "database does not exist"
-```bash
-psql -U postgres -c "CREATE DATABASE photoapp_dev;"
-```
-
-### "could not connect to server"
-```bash
-# Check if PostgreSQL is running
-pg_isready -h localhost -p 5432
-
-# Restart PostgreSQL
-# Windows: Services > PostgreSQL > Restart
-# Mac: brew services restart postgresql@14
-# Linux: sudo systemctl restart postgresql
-```
-
-### "Redis connection refused"
-```bash
-# Check if Redis is running
-redis-cli ping
-
-# Start Redis
-redis-server
-```
-
-### Migrations failed
-```bash
-# Undo and retry
-cd server
-npm run db:migrate:undo:all
-npm run db:migrate
-```
-
-### Port already in use
-```bash
-# Change ports in .env
-PORT=4001  # Server
-# Client via: npm run dev -- --port 5174
-```
-
-## 9. Production Deployment
-
-### Environment
-Set production-grade credentials and enable SSL:
-```bash
-NODE_ENV=production
-DB_SSL=true  # Enable SSL for production DB
-STRIPE_SECRET_KEY=sk_live_...  # Live keys, never test keys
-```
-
-### Database
-```bash
-npm run db:migrate  # Apply migrations to production DB
-```
-
-### Build & Deploy
-```bash
-npm run build
-# Deploy to Vercel, Heroku, AWS, etc.
-```
-
-## 10. Database Backup & Restore
-
-### Backup
-```bash
-pg_dump -U postgres photoapp_dev > backup.sql
-```
-
-### Restore
-```bash
-psql -U postgres photoapp_dev < backup.sql
-```
-
-## Emergency Procedures
-
-### Reset Development Database
-```bash
-# ⚠️ WARNING: This deletes all data
-psql -U postgres -c "DROP DATABASE photoapp_dev;"
-psql -U postgres -c "CREATE DATABASE photoapp_dev;"
-npm run db:migrate
-```
-
-### Check Migration Status
-```bash
-cd server
-npm run db:migrate  # Will show pending migrations
-```
-
-## Notes
-- All development uses test/sandbox credentials (Stripe test keys, etc.)
-- Never commit real credentials to Git
-- `node_modules` should be in `.gitignore`
-- Database backups should be automated in production
-- Redis is required for job queues and session storage
+- **Database connection failure:** check PostgreSQL availability and verify
+  the `DATABASE_URL` or `DB_*` values.
+- **Migration validation failure:** run the migration command against the
+  intended development database.
+- **CORS error:** check `CLIENT_URL`, `FRONTEND_URL`, and `CORS_ORIGINS` on the
+  API, then verify the request's actual origin.
+- **S3 access failure:** confirm bucket, region, IAM permissions, and that
+  credentials are configured only on the API. Do not share signed URLs or
+  credentials.
+- **Missing optional feature:** verify the provider credentials and client
+  build variables required by that feature.

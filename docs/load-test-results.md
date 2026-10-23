@@ -1,37 +1,28 @@
-# Load Test Result Graphs
+# Recorded Load-Test Results
 
-Load tests were executed with `autocannon` against production endpoints.
+The following figures were recorded in an earlier load-test note. The original
+record does not include the run date, tested deployment identifier, host
+configuration, region, or exact command. Treat these as historical observations,
+not a reproducible benchmark, production capacity guarantee, or SLA.
 
-## Raw Results
+| Scenario | Connections | Duration | Average requests/s | Average latency (ms) | P99 latency (ms) | Errors | Timeouts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Health endpoint | 20 | 20 s | 42.65 | 466.83 | 1311 | 0 | 0 |
+| Health endpoint | 50 | 20 s | 55.40 | 874.77 | 1930 | 0 | 0 |
+| API docs endpoint | 20 | 20 s | 51.45 | 379.67 | 949 | 0 | 0 |
 
-| Scenario | Connections | Duration | Avg Req/s | Avg Latency (ms) | P99 (ms) | Errors | Timeouts |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Health endpoint | 20 | 20s | 42.65 | 466.83 | 1311 | 0 | 0 |
-| Health endpoint | 50 | 20s | 55.40 | 874.77 | 1930 | 0 | 0 |
-| Docs endpoint | 20 | 20s | 51.45 | 379.67 | 949 | 0 | 0 |
+These results cover only the health and documentation endpoints. They do not
+measure database-heavy requests, authentication, uploads, image processing,
+payments, or end-to-end user journeys.
 
-## Throughput Graph
+## Reproducing a useful test
 
-```mermaid
-xychart-beta
-  title "Average Requests Per Second"
-  x-axis ["Health C20", "Health C50", "Docs C20"]
-  y-axis "Req/s" 0 --> 60
-  bar [42.65, 55.40, 51.45]
-```
+1. Record the commit, target URL, provider plan/region, and runtime configuration.
+2. Use a controlled test environment and a non-destructive endpoint.
+3. Record the exact `autocannon` command, warm-up, concurrency, and duration.
+4. Capture latency percentiles, throughput, errors, timeouts, and host metrics.
+5. Repeat tests and compare like-for-like runs before drawing conclusions.
 
-## Latency Graph
-
-```mermaid
-xychart-beta
-  title "Average Latency (ms)"
-  x-axis ["Health C20", "Health C50", "Docs C20"]
-  y-axis "Latency ms" 0 --> 1000
-  bar [466.83, 874.77, 379.67]
-```
-
-## Interpretation
-
-- The service remained stable under all tested loads with zero request errors.
-- Throughput increases at higher concurrency, with expected latency growth.
-- Static docs endpoint performed better than health endpoint under tested conditions due to warm cache behavior.
+The repository provides `npm run load:test --workspace=server` as a local
+starting point. Do not run load tests against a production service without
+authorization and a plan to avoid disrupting users.
