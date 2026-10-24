@@ -110,10 +110,12 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ![EpixBox configured application architecture showing browser requests, the Vercel frontend, Render API layers, Neon data, S3 and CloudFront media delivery, integrations, and CI/hosting workflows](./docs/architecture.svg)
 
-GitHub Actions builds and validates changes; configured Vercel and Render
-integrations handle application deployments. Docker Compose and Kubernetes are
-local workflows. Terraform is a validation foundation, not the source of
-production resources.
+**CI:** GitHub Actions builds the client and container images and validates
+selected Kubernetes manifests and Terraform configuration on pushes and pull
+requests. **CD:** configured Vercel and Render integrations auto-deploy from
+`main`; the repository does not configure a GitHub Actions deployment job.
+Docker Compose and Kubernetes are local workflows. Terraform is a validation
+foundation, not the source of production resources.
 
 ## How EpixBox is built
 
