@@ -108,7 +108,7 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ## Architecture
 
-![EpixBox production architecture showing the visitor, Vercel frontend, Render API, Neon database, S3 media storage, CloudFront delivery, and optional integrations](./docs/architecture.svg)
+![EpixBox configured application architecture showing browser requests, the Vercel frontend, Render API layers, Neon data, S3 and CloudFront media delivery, integrations, and CI/hosting workflows](./docs/architecture.svg)
 
 GitHub Actions builds and validates changes; configured Vercel and Render
 integrations handle application deployments. Docker Compose and Kubernetes are
