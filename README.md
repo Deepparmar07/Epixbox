@@ -108,7 +108,7 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ## Architecture
 
-![EpixBox configured application architecture showing browser requests, the Vercel frontend, Render API layers, Neon data, S3 and CloudFront media delivery, integrations, and CI/hosting workflows](./docs/architecture.svg)
+![EpixBox configured runtime architecture showing browser requests, Vercel frontend hosting, Render API middleware and route layers, Neon persistence, private S3 media storage, CloudFront image delivery, and external integrations](./docs/architecture.svg)
 
 ### CI/CD and infrastructure toolchain
 
