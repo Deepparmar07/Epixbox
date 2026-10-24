@@ -108,53 +108,19 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph Hosted["Production application"]
-        direction LR
-        Visitor["Photographer or client"] -->|"HTTPS"| Web["Vercel<br/>React + Vite"]
-        Web -->|"API proxy: /api/*"| API["Render<br/>Node.js + Express API"]
-        API -->|"Sequelize"| Database[("Neon<br/>PostgreSQL")]
-        API -->|"private media storage"| Storage[("AWS S3")]
-        Storage -->|"image origin"| CDN["CloudFront<br/>image delivery"]
-        CDN -->|"images"| Visitor
-    end
+![EpixBox configured runtime architecture showing browser requests, Vercel frontend hosting, Render API middleware and route layers, Neon persistence, private S3 media storage, CloudFront image delivery, and external integrations](./docs/architecture.svg)
 
-    subgraph Services["Connected services"]
-        direction LR
-        Payments["Razorpay / PayPal"]
-        Email["SMTP email"]
-        Sentry["Sentry<br/>optional errors and traces"]
-        LogRocket["LogRocket<br/>optional session monitoring"]
-    end
-    API -->|"payments and webhooks"| Payments
-    API -->|"transactional email"| Email
-    Web -.-> Sentry
-    API -.-> Sentry
-    Web -.-> LogRocket
+### CI/CD and infrastructure toolchain
 
-    subgraph Delivery["Source and continuous integration"]
-        direction LR
-        Developer["Developer"] --> Repository["GitHub repository"]
-        Repository -->|"configured deployment"| Web
-        Repository -->|"configured deployment"| API
-        Repository --> Actions["GitHub Actions"]
-        Actions --> Checks["Client and container builds<br/>Kubernetes and Terraform validation"]
-    end
+![EpixBox CI and CD architecture showing GitHub Actions builds and validation, Vercel and Render hosting deployments, and the separate Docker, Kubernetes, and Terraform workflows](./docs/delivery-toolchain.svg)
 
-    subgraph Local["Local development"]
-        direction LR
-        Compose["Docker Compose"]
-        Kubernetes["Docker Desktop Kubernetes"]
-        Terraform["Terraform foundation<br/>plan and validation only"]
-    end
-```
-
-The solid arrows show application traffic and configured integrations; dotted
-arrows indicate optional monitoring. GitHub Actions runs builds and
-configuration checks, while Vercel and Render handle their configured
-deployments. Docker Compose and Kubernetes are local workflows. Terraform is a
-validation foundation, not the source of the production resources.
+**CI:** GitHub Actions builds the client and container images and validates
+selected Kubernetes manifests and Terraform configuration on pushes to `main`
+and pull requests targeting `main`. **CD:** configured Vercel and Render
+integrations auto-deploy from `main`; the repository does not configure a
+GitHub Actions deployment job. Docker Compose and Kubernetes are local
+workflows. Terraform describes a possible AWS foundation and is validated by
+CI, but has not been applied to the hosted production services.
 
 ## How EpixBox is built
 

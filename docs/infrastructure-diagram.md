@@ -50,6 +50,10 @@ configuration checks, while Vercel and Render handle their configured
 deployments. Docker Compose and Kubernetes are local workflows. Terraform is a
 validation foundation, not the source of production resources.
 
+## CI/CD and engineering toolchain
+
+![CI/CD and toolchain diagram showing GitHub Actions validation, Vercel and Render deployments, Docker, local Kubernetes, and the unapplied Terraform foundation](./delivery-toolchain.svg)
+
 ## Build and validation
 
 ```mermaid

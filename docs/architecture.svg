@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title description">
+  <title id="title">EpixBox configured system architecture</title>
+  <desc id="description">Configured system architecture showing the browser and Vercel React application, the Vercel API rewrite to a Render Express service with security middleware and domain route groups, Sequelize and Neon PostgreSQL, private S3 photo storage and CloudFront delivery, payment and email providers, optional Sentry and LogRocket, and a separate GitHub Actions validation pipeline. Local Docker, Kubernetes, and Terraform workflows are identified separately. This diagram does not claim high availability or a private network topology.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#62748b"/>
+    </marker>
+    <marker id="blue-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#3974c6"/>
+    </marker>
+    <marker id="green-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#27835a"/>
+    </marker>
+    <marker id="amber-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#c78417"/>
+    </marker>
+    <style>
+      text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 1.1px; }
+      .heading { font-size: 20px; font-weight: 700; }
+      .body { font-size: 15px; }
+      .small { font-size: 13px; }
+      .edge { font-size: 13px; font-weight: 600; fill: #53657d; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1060" rx="18" fill="#f3f6fa"/>
+  <path d="M0 18Q0 0 18 0H1422Q1440 0 1440 18V100H0Z" fill="#142b4a"/>
+  <text x="48" y="39" fill="#9ec7ff" class="eyebrow">EPIXBOX  /  SYSTEM DESIGN</text>
+  <text x="48" y="72" fill="#ffffff" font-size="25" font-weight="700">Configured application architecture</text>
+  <text x="1392" y="58" text-anchor="end" fill="#c7d5e8" font-size="13">Application · data · integrations · delivery</text>
+
+  <rect x="32" y="120" width="1376" height="554" rx="14" fill="#ffffff" stroke="#d8e1ed" stroke-width="1.5"/>
+  <text x="56" y="151" class="eyebrow" fill="#64748b">01  /  APPLICATION REQUEST &amp; DATA FLOWS</text>
+  <text x="1384" y="151" text-anchor="end" class="small" fill="#75849a">Configured hosted services · not a high-availability or network-topology claim</text>
+
+  <rect x="56" y="190" width="220" height="124" rx="10" fill="#f5f8fd" stroke="#cbd8e8" stroke-width="1.5"/>
+  <rect x="56" y="190" width="220" height="5" rx="2.5" fill="#64748b"/>
+  <text x="76" y="220" class="eyebrow" fill="#64748b">USER EXPERIENCE</text>
+  <text x="76" y="250" class="heading" fill="#172b4d">Browser</text>
+  <text x="76" y="276" class="body" fill="#53657d">Photographer / client</text>
+  <text x="76" y="298" class="small" fill="#75849a">Portfolio · galleries · proofing</text>
+
+  <rect x="324" y="190" width="232" height="160" rx="10" fill="#eff6ff" stroke="#b6d0f2" stroke-width="1.5"/>
+  <rect x="324" y="190" width="232" height="5" rx="2.5" fill="#3974c6"/>
+  <text x="344" y="220" class="eyebrow" fill="#3974c6">FRONTEND HOSTING</text>
+  <text x="344" y="250" class="heading" fill="#172b4d">Vercel</text>
+  <text x="344" y="276" class="body" fill="#53657d">React 19 · Vite SPA</text>
+  <text x="344" y="298" class="small" fill="#75849a">Static app · API path rewrite</text>
+  <text x="344" y="325" class="small" fill="#75849a">React Router · Zustand · API client</text>
+
+  <rect x="604" y="176" width="492" height="469" rx="12" fill="#f8fbf9" stroke="#b8dfc7" stroke-width="1.5"/>
+  <rect x="604" y="176" width="492" height="5" rx="2.5" fill="#27835a"/>
+  <text x="628" y="207" class="eyebrow" fill="#27835a">API SERVICE  /  RENDER · NODE.JS · EXPRESS</text>
+  <text x="628" y="234" class="body" font-weight="700" fill="#172b4d">REST API: /api/v1  ·  /api compatibility mount</text>
+  <text x="1058" y="234" text-anchor="end" class="small" fill="#617792">/health · Swagger</text>
+
+  <rect x="628" y="251" width="444" height="91" rx="8" fill="#ffffff" stroke="#d5e5da"/>
+  <text x="646" y="274" class="eyebrow" fill="#27835a">CROSS-CUTTING MIDDLEWARE</text>
+  <text x="646" y="297" class="body" fill="#35465c">Helmet · CORS · body parsing · input sanitization</text>
+  <text x="646" y="321" class="body" fill="#35465c">Request logging · API rate limits · error handling</text>
+
+  <text x="628" y="371" class="eyebrow" fill="#64748b">DOMAIN ROUTES</text>
+  <rect x="628" y="385" width="137" height="91" rx="8" fill="#ffffff" stroke="#d5e5da"/>
+  <text x="645" y="412" font-size="14" font-weight="700" fill="#172b4d">Identity</text>
+  <text x="645" y="436" class="small" fill="#53657d">Auth · users</text>
+  <text x="645" y="457" class="small" fill="#53657d">Admin · settings</text>
+
+  <rect x="781" y="385" width="137" height="91" rx="8" fill="#ffffff" stroke="#d5e5da"/>
+  <text x="798" y="412" font-size="14" font-weight="700" fill="#172b4d">Photography</text>
+  <text x="798" y="436" class="small" fill="#53657d">Galleries · photos</text>
+  <text x="798" y="457" class="small" fill="#53657d">Proofing · upload</text>
+
+  <rect x="934" y="385" width="138" height="91" rx="8" fill="#ffffff" stroke="#d5e5da"/>
+  <text x="951" y="412" font-size="14" font-weight="700" fill="#172b4d">Commerce</text>
+  <text x="951" y="436" class="small" fill="#53657d">Orders · products</text>
+  <text x="951" y="457" class="small" fill="#53657d">Plans · payments</text>
+
+  <rect x="628" y="496" width="444" height="119" rx="8" fill="#ffffff" stroke="#d5e5da"/>
+  <text x="646" y="522" class="eyebrow" fill="#27835a">DATA ACCESS &amp; DOMAIN SERVICES</text>
+  <text x="646" y="548" class="body" fill="#35465c">Sequelize models and migrations · PostgreSQL persistence</text>
+  <text x="646" y="572" class="body" fill="#35465c">S3 upload / signed object access · image processing</text>
+  <text x="646" y="596" class="body" fill="#35465c">Payments / webhooks · email · Socket.IO workflows</text>
+
+  <rect x="1140" y="190" width="244" height="137" rx="10" fill="#fff8ea" stroke="#ead7ad" stroke-width="1.5"/>
+  <rect x="1140" y="190" width="244" height="5" rx="2.5" fill="#c78417"/>
+  <text x="1160" y="220" class="eyebrow" fill="#9b6817">RELATIONAL DATA</text>
+  <text x="1160" y="251" class="heading" fill="#433515">Neon PostgreSQL</text>
+  <text x="1160" y="278" class="body" fill="#655531">Accounts · galleries · orders</text>
+  <text x="1160" y="302" class="small" fill="#86744f">Application records / metadata</text>
+
+  <rect x="1140" y="355" width="244" height="126" rx="10" fill="#fff8ea" stroke="#ead7ad" stroke-width="1.5"/>
+  <rect x="1140" y="355" width="244" height="5" rx="2.5" fill="#c78417"/>
+  <text x="1160" y="385" class="eyebrow" fill="#9b6817">OBJECT STORAGE</text>
+  <text x="1160" y="416" class="heading" fill="#433515">Private AWS S3</text>
+  <text x="1160" y="443" class="body" fill="#655531">Photo / media objects</text>
+  <text x="1160" y="465" class="small" fill="#86744f">Uploads · signed object access</text>
+
+  <rect x="1140" y="509" width="244" height="108" rx="10" fill="#fff8ea" stroke="#ead7ad" stroke-width="1.5"/>
+  <rect x="1140" y="509" width="244" height="5" rx="2.5" fill="#d1932f"/>
+  <text x="1160" y="539" class="eyebrow" fill="#9b6817">IMAGE DELIVERY</text>
+  <text x="1160" y="571" class="heading" fill="#433515">CloudFront</text>
+  <text x="1160" y="594" class="small" fill="#86744f">Configured image distribution</text>
+
+  <path d="M276 251H316" fill="none" stroke="#62748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="296" y="237" text-anchor="middle" class="edge">HTTPS</text>
+  <path d="M556 251H596" fill="none" stroke="#3974c6" stroke-width="2" marker-end="url(#blue-arrow)"/>
+  <text x="576" y="237" text-anchor="middle" class="edge">/api/*</text>
+  <path d="M1096 262H1132" fill="none" stroke="#62748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1114" y="248" text-anchor="middle" class="edge">SQL</text>
+  <path d="M1096 425H1132" fill="none" stroke="#62748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1114" y="411" text-anchor="middle" class="edge">S3 API</text>
+  <path d="M1262 481V501" fill="none" stroke="#c78417" stroke-width="2" marker-end="url(#amber-arrow)"/>
+  <path d="M1140 565H1120V653H165V322" fill="none" stroke="#c78417" stroke-width="2" marker-end="url(#amber-arrow)"/>
+  <rect x="454" y="640" width="211" height="21" rx="10" fill="#ffffff"/>
+  <text x="559" y="655" text-anchor="middle" class="edge">Image response via CDN</text>
+
+  <rect x="32" y="699" width="1376" height="147" rx="14" fill="#ffffff" stroke="#d8e1ed" stroke-width="1.5"/>
+  <text x="56" y="730" class="eyebrow" fill="#64748b">02  /  INTEGRATIONS &amp; OBSERVABILITY</text>
+  <text x="1384" y="730" text-anchor="end" class="small" fill="#75849a">Optional providers are active only when configured</text>
+
+  <rect x="56" y="750" width="305" height="72" rx="9" fill="#f7f4fc" stroke="#d8cbed"/>
+  <text x="76" y="777" class="eyebrow" fill="#7954b5">PAYMENTS</text>
+  <text x="76" y="804" class="body" font-weight="700" fill="#302248">Razorpay · PayPal · API webhooks</text>
+
+  <rect x="383" y="750" width="264" height="72" rx="9" fill="#f7f4fc" stroke="#d8cbed"/>
+  <text x="403" y="777" class="eyebrow" fill="#7954b5">MESSAGING</text>
+  <text x="403" y="804" class="body" font-weight="700" fill="#302248">SMTP · server notifications</text>
+
+  <rect x="669" y="750" width="348" height="72" rx="9" fill="#f7f4fc" stroke="#d8cbed"/>
+  <text x="689" y="777" class="eyebrow" fill="#7954b5">ERRORS &amp; PERFORMANCE</text>
+  <text x="689" y="804" class="body" font-weight="700" fill="#302248">Sentry · optional frontend + API</text>
+
+  <rect x="1039" y="750" width="345" height="72" rx="9" fill="#f7f4fc" stroke="#d8cbed"/>
+  <text x="1059" y="777" class="eyebrow" fill="#7954b5">CLIENT SESSIONS</text>
+  <text x="1059" y="804" class="body" font-weight="700" fill="#302248">LogRocket · optional frontend</text>
+
+  <text x="720" y="876" text-anchor="middle" class="small" fill="#718198">Configured service relationships only · does not imply high availability, private networking, or unverified production controls.</text>
+</svg>
