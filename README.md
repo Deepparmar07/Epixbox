@@ -108,46 +108,12 @@ application ID is configured. See [Monitoring](#monitoring-and-configuration).
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    Visitor(["Photographer / client"])
-    Web["Vercel<br/>React + Vite"]
-    API["Render<br/>Node.js + Express"]
-    Database[("Neon<br/>PostgreSQL")]
-    Storage[("AWS S3<br/>private media")]
-    CDN["CloudFront<br/>image delivery"]
-    Payments["Razorpay / PayPal"]
-    Email["SMTP email"]
-    Sentry["Sentry<br/>optional monitoring"]
-    LogRocket["LogRocket<br/>optional sessions"]
+![EpixBox production architecture showing the visitor, Vercel frontend, Render API, Neon database, S3 media storage, CloudFront delivery, and optional integrations](./docs/architecture.svg)
 
-    Visitor -->|"HTTPS"| Web
-    Web -->|"API proxy"| API
-    API -->|"Sequelize"| Database
-    API -->|"upload / signed access"| Storage
-    Storage -->|"images"| CDN
-    CDN --> Visitor
-    API --> Payments
-    API --> Email
-    Web -.-> Sentry
-    API -.-> Sentry
-    Web -.-> LogRocket
-
-    classDef client fill:#e8f1ff,stroke:#316ac5,color:#102a56,stroke-width:1.5px
-    classDef app fill:#e9f7ef,stroke:#27834a,color:#123b24,stroke-width:1.5px
-    classDef data fill:#fff4df,stroke:#c78417,color:#593d0a,stroke-width:1.5px
-    classDef service fill:#f3edff,stroke:#7954b5,color:#352050,stroke-width:1.5px
-    class Visitor,Web client
-    class API app
-    class Database,Storage,CDN data
-    class Payments,Email,Sentry,LogRocket service
-```
-
-Solid arrows show application traffic; dotted arrows show optional monitoring.
-GitHub Actions runs build and configuration checks, while Vercel and Render
-handle their configured deployments. Docker Compose and Kubernetes are local
-workflows. Terraform is a validation foundation, not the source of production
-resources.
+GitHub Actions builds and validates changes; configured Vercel and Render
+integrations handle application deployments. Docker Compose and Kubernetes are
+local workflows. Terraform is a validation foundation, not the source of
+production resources.
 
 ## How EpixBox is built
 
