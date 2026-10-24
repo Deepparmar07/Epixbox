@@ -100,8 +100,8 @@
   <text x="541" y="553" class="eyebrow" fill="#3974c6">ORCHESTRATION</text>
   <text x="541" y="584" class="heading" fill="#172b4d">Kubernetes</text>
   <text x="541" y="611" class="body" fill="#53657d">Manifests define API and client workloads.</text>
-  <text x="541" y="636" class="body" fill="#53657d">Used for local Docker Desktop validation.</text>
-  <text x="541" y="664" class="small" fill="#75849a">Not deployed to the current Vercel / Render hosts.</text>
+  <text x="541" y="636" class="body" fill="#53657d">Local Docker Desktop validation.</text>
+  <text x="541" y="664" class="small" fill="#75849a">Separate from the hosted production runtime.</text>
 
   <rect x="980" y="521" width="402" height="166" rx="11" fill="#fff8ea" stroke="#ead7ad" stroke-width="1.5"/>
   <rect x="980" y="521" width="402" height="5" rx="2.5" fill="#c78417"/>
