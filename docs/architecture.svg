@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1060" viewBox="0 0 1440 1060" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title description">
   <title id="title">EpixBox configured system architecture</title>
   <desc id="description">Configured system architecture showing the browser and Vercel React application, the Vercel API rewrite to a Render Express service with security middleware and domain route groups, Sequelize and Neon PostgreSQL, private S3 photo storage and CloudFront delivery, payment and email providers, optional Sentry and LogRocket, and a separate GitHub Actions validation pipeline. Local Docker, Kubernetes, and Terraform workflows are identified separately. This diagram does not claim high availability or a private network topology.</desc>
   <defs>
@@ -135,23 +135,5 @@
   <text x="1059" y="777" class="eyebrow" fill="#7954b5">CLIENT SESSIONS</text>
   <text x="1059" y="804" class="body" font-weight="700" fill="#302248">LogRocket · optional frontend</text>
 
-  <rect x="32" y="871" width="1376" height="112" rx="14" fill="#ffffff" stroke="#d8e1ed" stroke-width="1.5"/>
-  <text x="56" y="902" class="eyebrow" fill="#64748b">03  /  CI, CD &amp; OPERATIONS</text>
-
-  <rect x="56" y="919" width="230" height="46" rx="8" fill="#f5f8fd" stroke="#cbd8e8"/>
-  <text x="171" y="948" text-anchor="middle" class="body" font-weight="700" fill="#172b4d">GitHub · main branch</text>
-  <rect x="332" y="919" width="440" height="46" rx="8" fill="#eff6ff" stroke="#b6d0f2"/>
-  <text x="552" y="940" text-anchor="middle" class="body" font-weight="700" fill="#172b4d">CI · GitHub Actions</text>
-  <text x="552" y="958" text-anchor="middle" class="small" fill="#617792">Builds · Kubernetes / Terraform validation</text>
-  <rect x="818" y="919" width="566" height="46" rx="8" fill="#eef8f2" stroke="#b8dfc7"/>
-  <text x="1101" y="940" text-anchor="middle" class="body" font-weight="700" fill="#172b4d">CD · Hosting integrations</text>
-  <text x="1101" y="958" text-anchor="middle" class="small" fill="#617792">Main-branch auto-deploy · Vercel frontend · Render API</text>
-
-  <path d="M286 942H324" fill="none" stroke="#62748b" stroke-width="2" marker-end="url(#arrow)"/>
-  <path d="M171 919V910H1374V919" fill="none" stroke="#27835a" stroke-width="2" marker-end="url(#green-arrow)"/>
-  <rect x="713" y="900" width="146" height="19" rx="9.5" fill="#ffffff"/>
-  <text x="786" y="914" text-anchor="middle" class="edge">main push · hosting CD</text>
-
-  <text x="720" y="1013" text-anchor="middle" class="small" fill="#718198">CI checks run in GitHub Actions. CD is handled by configured Vercel / Render integrations; no Actions deploy job is configured.</text>
-  <text x="720" y="1034" text-anchor="middle" class="small" fill="#718198">Local only: Docker Compose · Docker Desktop Kubernetes · Terraform plan/validation. Terraform is not applied to hosted production services.</text>
+  <text x="720" y="876" text-anchor="middle" class="small" fill="#718198">Configured service relationships only · does not imply high availability, private networking, or unverified production controls.</text>
 </svg>
